@@ -1,13 +1,33 @@
 [project]
 name = "agentlens-mcp"
 version = "0.1.0"
-description = "MCP server for AgentLens — allows MCP-native agents to send traces"
+description = "MCP server for AgentLens — zero-code observability for MCP-native AI agents"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
+authors = [{ name = "AgentLens Contributors" }]
+keywords = ["ai", "agents", "observability", "mcp", "model-context-protocol", "llm", "debugging"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "mcp>=1.0.0",
     "httpx>=0.27.0",
     "python-ulid>=2.7.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ArkFelix7/agentlens"
+Repository = "https://github.com/ArkFelix7/agentlens"
+Documentation = "https://github.com/ArkFelix7/agentlens#readme"
+"Bug Tracker" = "https://github.com/ArkFelix7/agentlens/issues"
 
 [build-system]
 requires = ["hatchling"]

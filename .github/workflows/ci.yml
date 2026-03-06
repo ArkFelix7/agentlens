@@ -96,7 +96,7 @@ jobs:
           cache: pip
 
       - name: Install SDK
-        run: pip install -e .
+        run: pip install -e ".[dev]"
 
       - name: Run SDK tests
         run: pytest tests/ -v --tb=short

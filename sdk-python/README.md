@@ -1,6 +1,6 @@
 # agentlens-sdk
 
-Python SDK for [AgentLens](https://github.com/ArkFelix7/agentlens-oss) — real-time observability and debugging for AI agents.
+Python SDK for [AgentLens](https://github.com/ArkFelix7/agentlens) — real-time observability and debugging for AI agents.
 
 ## Install
 
