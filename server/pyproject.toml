@@ -34,9 +34,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/aarya/agentlens"
-Repository = "https://github.com/aarya/agentlens"
-"Bug Tracker" = "https://github.com/aarya/agentlens/issues"
+Homepage = "https://github.com/ArkFelix7/agentlens-oss"
+Repository = "https://github.com/ArkFelix7/agentlens-oss"
+"Bug Tracker" = "https://github.com/ArkFelix7/agentlens-oss/issues"
 
 [project.optional-dependencies]
 dev = [

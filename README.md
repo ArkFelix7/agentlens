@@ -7,7 +7,7 @@
 **See every decision, trace every tool call, catch every hallucination.**
 
 <!-- Demo GIF goes here — record with OBS, convert to GIF with gifski, place at public/demo.gif -->
-<!-- ![AgentLens Demo](https://raw.githubusercontent.com/aarya/agentlens/main/dashboard/public/demo.gif) -->
+<!-- ![AgentLens Demo](https://raw.githubusercontent.com/ArkFelix7/agentlens-oss/main/dashboard/public/demo.gif) -->
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI SDK](https://img.shields.io/pypi/v/agentlens-sdk?label=agentlens-sdk)](https://pypi.org/project/agentlens-sdk/)
@@ -63,7 +63,7 @@ autoInstrument();
 ### Run from source (development)
 
 ```bash
-git clone https://github.com/aarya/agentlens
+git clone https://github.com/ArkFelix7/agentlens-oss
 cd agentlens
 make install && make dev
 ```

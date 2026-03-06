@@ -30,9 +30,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aarya/agentlens"
+    "url": "https://github.com/ArkFelix7/agentlens-oss"
   },
-  "homepage": "https://github.com/aarya/agentlens#readme",
+  "homepage": "https://github.com/ArkFelix7/agentlens-oss#readme",
   "dependencies": {
     "ws": "^8.18.0",
     "ulid": "^2.3.0"

@@ -1,6 +1,6 @@
 # @agentlens/sdk
 
-TypeScript/Node.js SDK for [AgentLens](https://github.com/aarya/agentlens) — real-time observability and debugging for AI agents.
+TypeScript/Node.js SDK for [AgentLens](https://github.com/ArkFelix7/agentlens-oss) — real-time observability and debugging for AI agents.
 
 ## Install
 
