@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_db
-from src.schemas.memory import MemoryEntryCreate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
+from src.schemas.memory import MemoryEntryCreate, MemoryEntryUpdate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
 from src.services import memory_service
 from src.websocket.manager import manager
 
@@ -21,7 +21,7 @@ async def create_memory(
     # Broadcast memory update to dashboard
     await manager.broadcast_to_dashboards({
         "type": "memory_update",
-        "data": entry.model_dump(),
+        "data": entry.model_dump(mode="json"),
     })
     return entry
 
@@ -46,3 +46,29 @@ async def get_memory_key(
     if result is None:
         raise HTTPException(status_code=404, detail="Memory key not found")
     return result
+
+
+@router.patch("/entry/{entry_id}", response_model=MemoryEntryResponse)
+async def update_memory_entry(
+    entry_id: str,
+    data: MemoryEntryUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update the content of a memory entry."""
+    entry = await memory_service.update_memory_entry(db, entry_id, data.content)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Memory entry not found")
+    await manager.broadcast_to_dashboards({"type": "memory_update", "data": entry.model_dump(mode="json")})
+    return entry
+
+
+@router.delete("/entry/{entry_id}", status_code=204)
+async def delete_memory_entry(
+    entry_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a memory entry."""
+    deleted = await memory_service.delete_memory_entry(db, entry_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Memory entry not found")
+    await manager.broadcast_to_dashboards({"type": "memory_deleted", "entry_id": entry_id})

@@ -1,7 +1,7 @@
 /** Memory inspector page — timeline + detail with version history. */
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { MemoryEntry } from '@/types';
@@ -16,6 +16,7 @@ export function MemoryPage() {
   const { apiUrl } = useSettingsStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<{ entries: MemoryEntry[] }>({
     queryKey: ['memory', activeSessionId],
@@ -25,6 +26,21 @@ export function MemoryPage() {
     },
     enabled: !!activeSessionId,
   });
+
+  const handleEdit = useCallback(async (entry: MemoryEntry, newContent: string) => {
+    await fetch(`${apiUrl}/api/v1/memory/entry/${entry.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: newContent }),
+    });
+    queryClient.invalidateQueries({ queryKey: ['memory', activeSessionId] });
+  }, [apiUrl, activeSessionId, queryClient]);
+
+  const handleDelete = useCallback(async (entry: MemoryEntry) => {
+    await fetch(`${apiUrl}/api/v1/memory/entry/${entry.id}`, { method: 'DELETE' });
+    setSelectedId(null);
+    queryClient.invalidateQueries({ queryKey: ['memory', activeSessionId] });
+  }, [apiUrl, activeSessionId, queryClient]);
 
   if (!activeSessionId) {
     return <EmptyState title="No session selected" description="Select a session to inspect memory." showSetup={false} />;
@@ -36,7 +52,6 @@ export function MemoryPage() {
 
   const entries = data?.entries || [];
   const selectedEntry = entries.find((e) => e.id === selectedId) || null;
-  // Get history (all entries with same key, older versions)
   const history = selectedEntry
     ? entries.filter((e) => e.memory_key === selectedEntry.memory_key && e.id !== selectedEntry.id)
     : [];
@@ -63,7 +78,12 @@ export function MemoryPage() {
 
       {/* Right: Detail */}
       <div className="flex-1 min-w-0">
-        <MemoryDetail entry={selectedEntry} history={history} />
+        <MemoryDetail
+          entry={selectedEntry}
+          history={history}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
     </div>
   );

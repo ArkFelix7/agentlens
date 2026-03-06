@@ -132,7 +132,7 @@ async def _handle_dashboard_after_accept(ws: WebSocket) -> None:
                     sessions_list = await get_sessions(db)
                     await manager.send_to_client(ws, {
                         "type": "sessions_list",
-                        "data": [s.model_dump() for s in sessions_list],
+                        "data": [s.model_dump(mode="json") for s in sessions_list],
                     })
                 elif msg_type == "get_session_events":
                     session_id = msg.get("session_id")
@@ -141,7 +141,7 @@ async def _handle_dashboard_after_accept(ws: WebSocket) -> None:
                         await manager.send_to_client(ws, {
                             "type": "session_events",
                             "session_id": session_id,
-                            "data": [e.model_dump() for e in events],
+                            "data": [e.model_dump(mode="json") for e in events],
                         })
                 elif msg_type == "clear_session":
                     session_id = msg.get("session_id")
@@ -202,7 +202,8 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
                     aname = data.get("agent_name", "agent")
                     if sid:
                         session_resp = await create_or_update_session(db, sid, aname)
-                        data = session_resp.model_dump()
+                        # Use mode='json' to get datetime as ISO strings (json.dumps-safe)
+                        data = session_resp.model_dump(mode="json")
                     await manager.broadcast_to_dashboards({"type": "session_start", "data": data})
                 elif msg_type == "session_end":
                     await manager.broadcast_to_dashboards({"type": "session_end", "data": msg.get("data", {})})
@@ -211,7 +212,7 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
                     if data:
                         try:
                             entry = await memory_service.create_memory_entry(db, MemoryEntryCreate(**data))
-                            await manager.broadcast_to_dashboards({"type": "memory_update", "data": entry.model_dump()})
+                            await manager.broadcast_to_dashboards({"type": "memory_update", "data": entry.model_dump(mode="json")})
                         except Exception as e:
                             logger.error(f"Memory update failed: {e}")
                 elif msg_type == "pong":

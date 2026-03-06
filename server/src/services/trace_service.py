@@ -100,6 +100,11 @@ async def ingest_events(
             if cost is None:
                 cost = 0.0
 
+            # Check for duplicate — skip if event ID already exists
+            existing = await db.get(TraceEvent, event_id)
+            if existing is not None:
+                continue
+
             event = TraceEvent(
                 id=event_id,
                 session_id=session_id,

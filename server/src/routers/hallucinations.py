@@ -35,7 +35,7 @@ async def check_hallucinations(
     for alert in alerts:
         await manager.broadcast_to_dashboards({
             "type": "hallucination_detected",
-            "data": alert.model_dump(),
+            "data": alert.model_dump(mode="json"),
         })
 
     return await hallucination_service.get_hallucinations(db, request.session_id)

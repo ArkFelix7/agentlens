@@ -1,6 +1,6 @@
 /** Root application component with React Router and all routes. */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -13,6 +13,7 @@ import { ReplayPage } from '@/pages/ReplayPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { WebSocketContext } from '@/contexts/WebSocketContext';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +27,14 @@ const queryClient = new QueryClient({
 /** Inner component that calls useWebSocket — requires Router context. */
 function AppInner() {
   const wsControls = useWebSocket();
+  const { theme } = useSettingsStore();
+
+  // Apply theme class on mount and whenever theme changes
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+  }, [theme]);
+
   return (
     <WebSocketContext.Provider value={wsControls}>
     <Routes>
