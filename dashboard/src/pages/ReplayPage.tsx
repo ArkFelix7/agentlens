@@ -1,8 +1,10 @@
 /** Session replay page — step through past agent runs frame by frame. */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { Link } from 'lucide-react';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { TraceEvent } from '@/types';
@@ -19,6 +21,32 @@ export function ReplayPage() {
   const { sessions, activeSessionId, setActiveSession } = useSessionStore();
   const { apiUrl } = useSettingsStore();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [copyLabel, setCopyLabel] = useState('Copy link');
+
+  // Auto-select session from URL param on mount
+  useEffect(() => {
+    const sessionParam = searchParams.get('session');
+    if (sessionParam && sessionParam !== activeSessionId) {
+      setActiveSession(sessionParam);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep URL in sync with active session
+  useEffect(() => {
+    if (activeSessionId) {
+      setSearchParams({ session: activeSessionId }, { replace: true });
+    }
+  }, [activeSessionId, setSearchParams]);
+
+  const copyShareLink = useCallback(() => {
+    const url = new URL(window.location.href);
+    if (activeSessionId) url.searchParams.set('session', activeSessionId);
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      setCopyLabel('Copied!');
+      setTimeout(() => setCopyLabel('Copy link'), 2000);
+    });
+  }, [activeSessionId]);
 
   const { data, isLoading } = useQuery<{ events: TraceEvent[] }>({
     queryKey: ['replay', activeSessionId],
@@ -63,12 +91,26 @@ export function ReplayPage() {
     );
   }
 
+  // Session is selected but still loading data
+  if (!activeSessionId) return null;
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-full"><LoadingSpinner size="lg" /></div>;
   }
 
   return (
     <div className="flex flex-col h-full">
+      {/* Toolbar: share link */}
+      <div className="flex items-center justify-end px-4 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
+        <button
+          onClick={copyShareLink}
+          className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          <Link size={12} />
+          {copyLabel}
+        </button>
+      </div>
+
       {/* Main content */}
       <div className="flex flex-1 min-h-0">
         {/* Center: Graph */}

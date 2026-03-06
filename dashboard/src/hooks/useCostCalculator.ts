@@ -10,6 +10,7 @@ export interface CostSummary {
   costByModel: Record<string, number>;
   mostExpensiveModel: string | null;
   mostExpensiveCost: number;
+  projectedMonthlyCost: number | null;
 }
 
 export function useCostCalculator(events: TraceEvent[]): CostSummary {
@@ -35,6 +36,19 @@ export function useCostCalculator(events: TraceEvent[]): CostSummary {
       }
     }
 
+    // Project monthly cost based on observed event time span
+    let projectedMonthlyCost: number | null = null;
+    const tsEvents = events.filter((e) => e.timestamp);
+    if (tsEvents.length >= 2 && totalCost > 0) {
+      const times = tsEvents.map((e) => new Date(e.timestamp).getTime());
+      const spanMs = Math.max(...times) - Math.min(...times);
+      const FIVE_MINUTES_MS = 5 * 60 * 1000;
+      const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+      if (spanMs >= FIVE_MINUTES_MS) {
+        projectedMonthlyCost = (totalCost / spanMs) * MONTH_MS;
+      }
+    }
+
     return {
       totalCost,
       totalTokens,
@@ -42,6 +56,7 @@ export function useCostCalculator(events: TraceEvent[]): CostSummary {
       costByModel,
       mostExpensiveModel,
       mostExpensiveCost,
+      projectedMonthlyCost,
     };
   }, [events]);
 }

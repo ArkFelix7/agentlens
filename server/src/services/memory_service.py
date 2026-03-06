@@ -3,6 +3,7 @@
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -81,6 +82,28 @@ async def get_memory_for_session(db: AsyncSession, session_id: str) -> MemoryLis
     )
     entries = result.scalars().all()
     return MemoryListResponse(entries=[_orm_to_response(e) for e in entries])
+
+
+async def update_memory_entry(db: AsyncSession, entry_id: str, content: str) -> Optional[MemoryEntryResponse]:
+    """Update the content of a memory entry by ID."""
+    entry = await db.get(MemoryEntry, entry_id)
+    if entry is None:
+        return None
+    entry.content = content
+    entry.action = "updated"
+    await db.commit()
+    await db.refresh(entry)
+    return _orm_to_response(entry)
+
+
+async def delete_memory_entry(db: AsyncSession, entry_id: str) -> bool:
+    """Delete a memory entry by ID."""
+    entry = await db.get(MemoryEntry, entry_id)
+    if entry is None:
+        return False
+    await db.delete(entry)
+    await db.commit()
+    return True
 
 
 async def get_memory_by_key(

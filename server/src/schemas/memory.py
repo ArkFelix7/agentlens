@@ -5,6 +5,10 @@ from datetime import datetime
 from typing import Optional
 
 
+class MemoryEntryUpdate(BaseModel):
+    content: str
+
+
 class MemoryEntryCreate(BaseModel):
     session_id: str
     agent_id: str = "default"
