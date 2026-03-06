@@ -1,12 +1,13 @@
 /** Overall application layout wrapper with sidebar and top bar. */
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 export function MainLayout() {
+  const location = useLocation();
   return (
     <div className="flex h-full bg-[var(--bg-primary)]">
       <Sidebar />

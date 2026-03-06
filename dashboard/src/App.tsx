@@ -12,6 +12,7 @@ import { MemoryPage } from '@/pages/MemoryPage';
 import { ReplayPage } from '@/pages/ReplayPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { WebSocketContext } from '@/contexts/WebSocketContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,9 +25,9 @@ const queryClient = new QueryClient({
 
 /** Inner component that calls useWebSocket — requires Router context. */
 function AppInner() {
-  // Initialize WebSocket connection on app mount
-  useWebSocket();
+  const wsControls = useWebSocket();
   return (
+    <WebSocketContext.Provider value={wsControls}>
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<TracesPage />} />
@@ -37,6 +38,7 @@ function AppInner() {
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
+    </WebSocketContext.Provider>
   );
 }
 

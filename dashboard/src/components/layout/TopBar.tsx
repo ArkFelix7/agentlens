@@ -3,13 +3,13 @@
 import React from 'react';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useWebSocketStore } from '@/stores/websocketStore';
-import { useWebSocket } from '@/hooks/useWebSocket';
+import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import clsx from 'clsx';
 
 export function TopBar() {
   const { sessions, activeSessionId, setActiveSession } = useSessionStore();
   const { status } = useWebSocketStore();
-  const { requestSessionEvents } = useWebSocket();
+  const { requestSessionEvents } = useWebSocketContext();
 
   const handleSessionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;

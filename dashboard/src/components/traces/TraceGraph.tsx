@@ -15,6 +15,70 @@ const EVENT_COLORS: Record<EventType, string> = {
   error: '#ef4444',
 };
 
+/** Return node radius for sizing (used for arrowhead offset too). */
+function nodeRadius(d: D3Node): number {
+  const tokens = d.event.tokens_input + d.event.tokens_output;
+  return Math.max(16, Math.min(32, 16 + tokens / 500));
+}
+
+/** Append the correct SVG shape for the given event type to a D3 selection. */
+function appendNodeShape(
+  selection: d3.Selection<SVGGElement, D3Node, SVGGElement, unknown>,
+  selectedEventId: string | null,
+) {
+  // Circles: llm_call, user_input, error (default)
+  selection
+    .filter((d) => ['llm_call', 'user_input', 'error'].includes(d.event.event_type))
+    .append('circle')
+    .attr('r', nodeRadius)
+    .attr('fill', (d) => `${EVENT_COLORS[d.event.event_type] || '#6b6b80'}25`)
+    .attr('stroke', (d) => EVENT_COLORS[d.event.event_type] || '#6b6b80')
+    .attr('stroke-width', (d) => d.id === selectedEventId ? 3 : 1.5)
+    .attr('filter', (d) => d.id === selectedEventId ? 'url(#glow)' : null);
+
+  // Rounded rect: tool_call
+  selection
+    .filter((d) => d.event.event_type === 'tool_call')
+    .append('rect')
+    .attr('x', (d) => -nodeRadius(d))
+    .attr('y', (d) => -nodeRadius(d) * 0.7)
+    .attr('width', (d) => nodeRadius(d) * 2)
+    .attr('height', (d) => nodeRadius(d) * 1.4)
+    .attr('rx', 6)
+    .attr('ry', 6)
+    .attr('fill', (d) => `${EVENT_COLORS[d.event.event_type]}25`)
+    .attr('stroke', (d) => EVENT_COLORS[d.event.event_type])
+    .attr('stroke-width', (d) => d.id === selectedEventId ? 3 : 1.5)
+    .attr('filter', (d) => d.id === selectedEventId ? 'url(#glow)' : null);
+
+  // Diamond: decision
+  selection
+    .filter((d) => d.event.event_type === 'decision')
+    .append('polygon')
+    .attr('points', (d) => {
+      const r = nodeRadius(d);
+      return `0,${-r} ${r},0 0,${r} ${-r},0`;
+    })
+    .attr('fill', (d) => `${EVENT_COLORS[d.event.event_type]}25`)
+    .attr('stroke', (d) => EVENT_COLORS[d.event.event_type])
+    .attr('stroke-width', (d) => d.id === selectedEventId ? 3 : 1.5)
+    .attr('filter', (d) => d.id === selectedEventId ? 'url(#glow)' : null);
+
+  // Hexagon: memory_read, memory_write
+  selection
+    .filter((d) => ['memory_read', 'memory_write'].includes(d.event.event_type))
+    .append('polygon')
+    .attr('points', (d) => {
+      const r = nodeRadius(d);
+      const angles = [0, 60, 120, 180, 240, 300].map((a) => (a * Math.PI) / 180);
+      return angles.map((a) => `${r * Math.cos(a)},${r * Math.sin(a)}`).join(' ');
+    })
+    .attr('fill', (d) => `${EVENT_COLORS[d.event.event_type]}25`)
+    .attr('stroke', (d) => EVENT_COLORS[d.event.event_type])
+    .attr('stroke-width', (d) => d.id === selectedEventId ? 3 : 1.5)
+    .attr('filter', (d) => d.id === selectedEventId ? 'url(#glow)' : null);
+}
+
 interface TraceGraphProps {
   graphData: GraphData;
   selectedEventId: string | null;
@@ -47,11 +111,13 @@ export function TraceGraph({ graphData, selectedEventId, onSelectEvent }: TraceG
         }) as unknown as (selection: d3.Selection<SVGSVGElement, unknown, null, undefined>) => void
     );
 
-    // Arrow marker for links
-    svg.append('defs').append('marker')
+    // Defs: arrowhead + glow filter
+    const defs = svg.append('defs');
+
+    defs.append('marker')
       .attr('id', 'arrowhead')
       .attr('viewBox', '0 -5 10 10')
-      .attr('refX', 20)
+      .attr('refX', 22)
       .attr('refY', 0)
       .attr('markerWidth', 6)
       .attr('markerHeight', 6)
@@ -60,12 +126,18 @@ export function TraceGraph({ graphData, selectedEventId, onSelectEvent }: TraceG
       .attr('d', 'M0,-5L10,0L0,5')
       .attr('fill', 'var(--border-default)');
 
+    const filter = defs.append('filter').attr('id', 'glow');
+    filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'coloredBlur');
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
     // Force simulation
     const simulation = d3.forceSimulation<D3Node>(nodes)
-      .force('link', d3.forceLink<D3Node, D3Link>(links).id((d) => d.id).distance(80))
-      .force('charge', d3.forceManyBody().strength(-200))
+      .force('link', d3.forceLink<D3Node, D3Link>(links).id((d) => d.id).distance(90))
+      .force('charge', d3.forceManyBody().strength(-220))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide(35));
+      .force('collision', d3.forceCollide(38));
 
     simulationRef.current = simulation;
 
@@ -105,25 +177,8 @@ export function TraceGraph({ graphData, selectedEventId, onSelectEvent }: TraceG
         onSelectEvent(d.id);
       });
 
-    // Node circles
-    node.append('circle')
-      .attr('r', (d) => {
-        // Node size proportional to token cost, min 16, max 32
-        const tokens = d.event.tokens_input + d.event.tokens_output;
-        return Math.max(16, Math.min(32, 16 + tokens / 500));
-      })
-      .attr('fill', (d) => `${EVENT_COLORS[d.event.event_type] || '#6b6b80'}25`)
-      .attr('stroke', (d) => EVENT_COLORS[d.event.event_type] || '#6b6b80')
-      .attr('stroke-width', (d) => d.id === selectedEventId ? 3 : 1.5)
-      .attr('filter', (d) => d.id === selectedEventId ? 'url(#glow)' : null);
-
-    // Glow filter for selected node
-    const defs = svg.select('defs');
-    const filter = defs.append('filter').attr('id', 'glow');
-    filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'coloredBlur');
-    const feMerge = filter.append('feMerge');
-    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
-    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+    // Append shape based on event type
+    appendNodeShape(node, selectedEventId);
 
     // Node labels
     node.append('text')

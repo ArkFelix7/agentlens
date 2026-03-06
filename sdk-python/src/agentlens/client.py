@@ -29,6 +29,7 @@ class AgentLensClient:
         self._max_buffer_size = 20
         self._connected = False
         self._session_id: Optional[str] = None
+        self._agent_name: Optional[str] = None
         self._flush_task: Optional[asyncio.Task] = None
 
     async def connect(self) -> None:
@@ -43,6 +44,15 @@ class AgentLensClient:
             self._connected = True
             # Identify as SDK client
             await self._ws.send(json.dumps({"type": "hello", "role": "sdk"}))
+            # Announce session with agent_name so server can create it properly
+            if self._session_id:
+                await self._ws.send(json.dumps({
+                    "type": "session_start",
+                    "data": {
+                        "session_id": self._session_id,
+                        "agent_name": self._agent_name or "agent",
+                    },
+                }))
             self._flush_task = asyncio.create_task(self._flush_loop())
             logger.info(f"AgentLens SDK connected to {self.ws_url}")
         except Exception as e:
