@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, AsyncMock, patch
 @pytest.mark.asyncio
 async def test_openai_interceptor_captures_tokens():
     """OpenAI interceptor captures model, token counts, and output."""
+    pytest.importorskip("openai", reason="openai extra not installed")
     import types
     captured = []
 
