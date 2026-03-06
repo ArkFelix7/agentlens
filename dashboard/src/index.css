@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== AGENTLENS DESIGN SYSTEM ===== */
+/* Bloomberg-terminal-grade developer tool aesthetic */
+
+:root {
+  /* Backgrounds */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1a1a26;
+  --bg-elevated: #222233;
+
+  /* Borders */
+  --border-subtle: #2a2a3a;
+  --border-default: #3a3a4a;
+  --border-focus: #6366f1;
+
+  /* Text */
+  --text-primary: #e4e4ed;
+  --text-secondary: #9494a8;
+  --text-tertiary: #6b6b80;
+  --text-inverse: #0a0a0f;
+
+  /* Accent Colors */
+  --accent-indigo: #6366f1;
+  --accent-indigo-hover: #818cf8;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #a855f7;
+
+  /* Trace Event Type Colors */
+  --event-llm: #a855f7;
+  --event-tool: #06b6d4;
+  --event-decision: #f59e0b;
+  --event-memory: #6366f1;
+  --event-error: #ef4444;
+  --event-user: #10b981;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Typography */
+  --font-display: 'JetBrains Mono', monospace;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Light mode overrides */
+.light {
+  --bg-primary: #f8f8fc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f0f8;
+  --bg-elevated: #e8e8f4;
+  --border-subtle: #e0e0ec;
+  --border-default: #c8c8d8;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-tertiary: #7a7a9a;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Base reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent-indigo);
+  outline-offset: 2px;
+}
+
+/* Code and mono */
+code,
+pre,
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Selection */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+  color: var(--text-primary);
+}
+
+/* D3 graph styles */
+.trace-graph .node circle {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.trace-graph .node:hover circle {
+  filter: brightness(1.3);
+}
+
+.trace-graph .link {
+  stroke: var(--border-default);
+  stroke-opacity: 0.6;
+}
+
+.trace-graph .link.active {
+  stroke: var(--accent-indigo);
+  stroke-dasharray: 5;
+  animation: dash 0.5s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* Pulse animation for live indicator */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.live-pulse {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* React JSON View customization */
+.json-viewer {
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  background: transparent !important;
+}

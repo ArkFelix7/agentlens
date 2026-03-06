@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8766:8766"
+    volumes:
+      - ./server/data:/app/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/agentlens.db
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_WS_URL=ws://localhost:8766/ws
+      - VITE_API_URL=http://localhost:8766
+    depends_on:
+      - server
