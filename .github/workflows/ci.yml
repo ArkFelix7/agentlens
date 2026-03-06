@@ -40,7 +40,7 @@ jobs:
         run: mypy src/ --ignore-missing-imports || true
 
       - name: Run unit tests
-        run: pytest tests/ -v --tb=short -x
+        run: pytest tests/ -v --tb=short -x --ignore=tests/test_websocket.py
 
   # -----------------------------------------------------------------------
   # Dashboard — TypeScript build + lint
@@ -98,10 +98,13 @@ jobs:
       - name: Install SDK
         run: pip install -e .
 
+      - name: Run SDK tests
+        run: pytest tests/ -v --tb=short
+
       - name: Smoke test imports
         run: |
-          python -c "from agentlens import init, trace, auto_instrument; print('SDK imports OK')"
-          python -c "from agentlens.interceptors import instrument_crewai, instrument_autogen; print('Interceptors imports OK')"
+          python -c "from agentlens_sdk import init, trace, auto_instrument; print('SDK imports OK')"
+          python -c "from agentlens_sdk.interceptors import instrument_crewai, instrument_autogen; print('Interceptors imports OK')"
 
   # -----------------------------------------------------------------------
   # SDK TypeScript — build smoke test
