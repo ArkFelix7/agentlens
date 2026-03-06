@@ -10,6 +10,7 @@ from sqlalchemy import select
 from ulid import ULID
 
 from src.models.memory_entry import MemoryEntry
+from src.models.session import Session
 from src.schemas.memory import MemoryEntryCreate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,12 @@ def _orm_to_response(entry: MemoryEntry) -> MemoryEntryResponse:
 
 
 async def create_memory_entry(db: AsyncSession, data: MemoryEntryCreate) -> MemoryEntryResponse:
-    """Create a new memory entry with auto-versioning."""
+    """Create a new memory entry with auto-versioning. Auto-creates session if it doesn't exist."""
+    # Ensure session exists (mirrors trace_service.ingest_events behaviour)
+    result = await db.execute(select(Session).where(Session.id == data.session_id))
+    if result.scalar_one_or_none() is None:
+        db.add(Session(id=data.session_id, agent_name="unnamed", status="active"))
+
     # Get current version for this memory_key in this session
     result = await db.execute(
         select(MemoryEntry)
