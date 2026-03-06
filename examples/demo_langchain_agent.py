@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'sdk-python', 'src'))
 
-from agentlens import init
+from agentlens_sdk import init
 
 
 async def main():
@@ -22,7 +22,7 @@ async def main():
     try:
         from langchain_openai import ChatOpenAI
         from langchain_core.prompts import ChatPromptTemplate
-        from agentlens.interceptors.langchain_interceptor import AgentLensCallbackHandler
+        from agentlens_sdk.interceptors.langchain_interceptor import AgentLensCallbackHandler
 
         handler = AgentLensCallbackHandler()
         llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[handler])
@@ -38,7 +38,7 @@ async def main():
         print(f"  Result: {result.content}")
     except ImportError:
         print("  LangChain not installed. Sending simulated trace instead.")
-        from agentlens.trace import SpanContext, get_client, get_session_id
+        from agentlens_sdk.trace import SpanContext, get_client, get_session_id
         span = SpanContext("tool_call", "langchain_simulated", get_session_id() or "demo", get_client())
         span.set_input({"question": "Explain LangChain in one sentence."})
         span.set_output({"answer": "LangChain is a framework for building LLM-powered applications."})

@@ -10,6 +10,7 @@ import logging
 import signal
 import asyncio
 from contextlib import asynccontextmanager
+import uvicorn
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -221,3 +222,14 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
         pass
     finally:
         manager.sdk_clients.discard(ws)
+
+
+def run() -> None:
+    """CLI entrypoint: agentlens-server"""
+    uvicorn.run(
+        "src.main:app",
+        host="0.0.0.0",
+        port=8766,
+        reload=False,
+        log_level="info",
+    )

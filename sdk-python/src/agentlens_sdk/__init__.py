@@ -7,7 +7,7 @@ Public API:
     get_tracer()     — Get the current tracer for manual spans
 
 Example:
-    from agentlens import init, trace, auto_instrument
+    from agentlens_sdk import init, trace, auto_instrument
 
     init(server_url="ws://localhost:8766/ws")
 
@@ -16,8 +16,8 @@ Example:
         ...
 """
 
-from agentlens.trace import init, trace, auto_instrument, get_current_tracer as get_tracer, Tracer, SpanContext
-from agentlens.config import get_config
+from agentlens_sdk.trace import init, trace, auto_instrument, get_current_tracer as get_tracer, Tracer, SpanContext
+from agentlens_sdk.config import get_config
 
 __version__ = "0.1.0"
 __all__ = ["init", "trace", "auto_instrument", "get_tracer", "Tracer", "SpanContext", "get_config"]

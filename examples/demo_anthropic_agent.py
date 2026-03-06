@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'sdk-python', 'src'))
 
-from agentlens import init, auto_instrument
+from agentlens_sdk import init, auto_instrument
 
 
 async def call_anthropic(question: str) -> str:

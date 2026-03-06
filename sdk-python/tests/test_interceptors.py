@@ -29,9 +29,10 @@ async def test_openai_interceptor_captures_tokens():
     import openai.resources.chat.completions as completions_module
     original = completions_module.AsyncCompletions.create
 
-    with patch("agentlens.trace._global_client", MockClient()):
-        with patch("agentlens.trace._global_session_id", "interceptor-test"):
-            from agentlens.interceptors.openai_interceptor import patch_openai
+    import sys; import agentlens_sdk.trace; trace_mod = sys.modules['agentlens_sdk.trace']
+    with patch.object(trace_mod, "_global_client", MockClient()):
+        with patch.object(trace_mod, "_global_session_id", "interceptor-test"):
+            from agentlens_sdk.interceptors.openai_interceptor import patch_openai
             with patch.object(completions_module.AsyncCompletions, "create", new=AsyncMock(return_value=mock_response)):
                 patch_openai()
 

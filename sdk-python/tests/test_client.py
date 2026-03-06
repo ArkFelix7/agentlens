@@ -8,7 +8,7 @@ from unittest.mock import patch, AsyncMock
 @pytest.mark.asyncio
 async def test_buffer_and_flush():
     """Buffer events then flush via HTTP when WS not available."""
-    from agentlens.client import AgentLensClient
+    from agentlens_sdk.client import AgentLensClient
 
     flushed = []
 
@@ -28,7 +28,7 @@ async def test_buffer_and_flush():
 @pytest.mark.asyncio
 async def test_max_buffer_triggers_flush():
     """When buffer reaches max_buffer_size, flush is triggered automatically."""
-    from agentlens.client import AgentLensClient
+    from agentlens_sdk.client import AgentLensClient
 
     flush_calls = []
 
@@ -55,7 +55,7 @@ async def test_max_buffer_triggers_flush():
 @pytest.mark.asyncio
 async def test_sensitive_data_redaction():
     """Ensure sensitive fields are redacted in event data."""
-    from agentlens.trace import _redact
+    from agentlens_sdk.trace import _redact
 
     data = {
         "query": "find me flights",

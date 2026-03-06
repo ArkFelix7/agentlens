@@ -1,7 +1,7 @@
 """OpenAI interceptor — monkey-patches the OpenAI async and sync clients to auto-trace all completions."""
 
 import logging
-from agentlens.trace import get_client, get_session_id, SpanContext
+from agentlens_sdk.trace import get_client, get_session_id, SpanContext
 from ulid import ULID
 
 logger = logging.getLogger(__name__)
@@ -86,5 +86,5 @@ def patch_openai() -> None:
 
 def _safe_messages(messages: list) -> list:
     """Return messages with sensitive content preserved but API keys redacted."""
-    from agentlens.trace import _redact
+    from agentlens_sdk.trace import _redact
     return [_redact(m) if isinstance(m, dict) else m for m in messages]

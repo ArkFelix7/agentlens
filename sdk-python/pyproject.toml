@@ -1,13 +1,34 @@
 [project]
-name = "agentlens"
+name = "agentlens-sdk"
 version = "0.1.0"
 description = "Python SDK for AgentLens — observability for AI agents"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
+authors = [{ name = "AgentLens Contributors" }]
+keywords = ["ai", "agents", "observability", "tracing", "llm", "debugging", "openai", "anthropic"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "websockets>=12.0",
     "aiohttp>=3.10.0",
     "python-ulid>=2.7.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/aarya/agentlens"
+Repository = "https://github.com/aarya/agentlens"
+Documentation = "https://github.com/aarya/agentlens#readme"
+"Bug Tracker" = "https://github.com/aarya/agentlens/issues"
 
 [project.optional-dependencies]
 openai = ["openai>=1.0.0"]
@@ -21,4 +42,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agentlens"]
+packages = ["src/agentlens_sdk"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

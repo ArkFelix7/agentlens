@@ -15,8 +15,8 @@ from typing import Any, Callable, Optional
 
 from ulid import ULID
 
-from agentlens.client import AgentLensClient
-from agentlens.config import get_config, set_config, SDKConfig, SENSITIVE_KEYS
+from agentlens_sdk.client import AgentLensClient
+from agentlens_sdk.config import get_config, set_config, SDKConfig, SENSITIVE_KEYS
 
 logger = logging.getLogger(__name__)
 
@@ -163,27 +163,39 @@ class SpanContext:
             self._metadata = {}
         self._metadata[key] = value
 
-    def end(self) -> None:
-        """Finalize the span and send to AgentLens server."""
+    def _build_event(self) -> dict:
+        duration_ms = (time.perf_counter() - self._start_time) * 1000
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "parent_event_id": self.parent_event_id,
+            "event_type": self.event_type,
+            "event_name": self.event_name,
+            "timestamp": self._timestamp,
+            "duration_ms": duration_ms,
+            "input_data": self._input_data,
+            "output_data": self._output_data,
+            "model": self._model,
+            "tokens_input": self._tokens_input,
+            "tokens_output": self._tokens_output,
+            "status": self._status,
+            "error_message": self._error,
+            "metadata": self._metadata,
+        }
+
+    async def async_end(self) -> None:
+        """Finalize the span and await the send — use from async contexts."""
         try:
-            duration_ms = (time.perf_counter() - self._start_time) * 1000
-            event = {
-                "id": self.id,
-                "session_id": self.session_id,
-                "parent_event_id": self.parent_event_id,
-                "event_type": self.event_type,
-                "event_name": self.event_name,
-                "timestamp": self._timestamp,
-                "duration_ms": duration_ms,
-                "input_data": self._input_data,
-                "output_data": self._output_data,
-                "model": self._model,
-                "tokens_input": self._tokens_input,
-                "tokens_output": self._tokens_output,
-                "status": self._status,
-                "error_message": self._error,
-                "metadata": self._metadata,
-            }
+            event = self._build_event()
+            if self._client:
+                await self._client.send_event(event)
+        except Exception:
+            pass
+
+    def end(self) -> None:
+        """Finalize the span and send to AgentLens server (sync context)."""
+        try:
+            event = self._build_event()
             if self._client:
                 try:
                     loop = asyncio.get_event_loop()
@@ -280,7 +292,7 @@ def trace(
                 span.set_error(str(e))
                 raise
             finally:
-                span.end()
+                await span.async_end()
 
         @functools.wraps(fn)
         def sync_wrapper(*args, **kwargs):
@@ -315,9 +327,17 @@ def trace(
 
 
 def auto_instrument() -> None:
-    """Auto-instrument all supported AI frameworks (OpenAI, Anthropic)."""
+    """Auto-instrument supported AI frameworks.
+
+    Automatically patches: OpenAI, Anthropic.
+    Manual instrumentation required for:
+      - LangChain: use AgentLensCallbackHandler
+      - CrewAI: use instrument_crewai()
+      - AutoGen: use instrument_autogen()
+      - Semantic Kernel: use instrument_semantic_kernel(kernel)
+    """
     try:
-        from agentlens.interceptors.openai_interceptor import patch_openai
+        from agentlens_sdk.interceptors.openai_interceptor import patch_openai
         patch_openai()
         logger.info("AgentLens: OpenAI auto-instrumented.")
     except ImportError:
@@ -326,7 +346,7 @@ def auto_instrument() -> None:
         logger.warning(f"AgentLens: OpenAI instrumentation failed: {e}")
 
     try:
-        from agentlens.interceptors.anthropic_interceptor import patch_anthropic
+        from agentlens_sdk.interceptors.anthropic_interceptor import patch_anthropic
         patch_anthropic()
         logger.info("AgentLens: Anthropic auto-instrumented.")
     except ImportError:
