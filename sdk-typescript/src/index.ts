@@ -1,7 +1,7 @@
 /** AgentLens TypeScript SDK — public API exports.
  *
  * Usage:
- *   import { init, trace, autoInstrument } from '@agentlens/sdk';
+ *   import { init, trace, autoInstrument } from '@agentlens-sdk/sdk';
  *   init({ serverUrl: 'ws://localhost:8766/ws' });
  */
 

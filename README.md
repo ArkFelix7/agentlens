@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI SDK](https://img.shields.io/pypi/v/agentlens-sdk?label=agentlens-sdk)](https://pypi.org/project/agentlens-sdk/)
 [![PyPI Server](https://img.shields.io/pypi/v/agentlens-server?label=agentlens-server)](https://pypi.org/project/agentlens-server/)
-[![npm](https://img.shields.io/npm/v/@agentlens/sdk)](https://www.npmjs.com/package/@agentlens/sdk)
+[![npm](https://img.shields.io/npm/v/@agentlens-sdk/sdk)](https://www.npmjs.com/package/@agentlens-sdk/sdk)
 
 [Quick Start](#quick-start) · [Features](#features) · [Supported Frameworks](#supported-frameworks) · [MCP Integration](#mcp-integration) · [Examples](#examples) · [Contributing](#contributing)
 
@@ -52,11 +52,11 @@ auto_instrument()
 ### TypeScript / Node.js
 
 ```bash
-npm install @agentlens/sdk
+npm install @agentlens-sdk/sdk
 ```
 
 ```typescript
-import { autoInstrument } from '@agentlens/sdk';
+import { autoInstrument } from '@agentlens-sdk/sdk';
 autoInstrument();
 ```
 
