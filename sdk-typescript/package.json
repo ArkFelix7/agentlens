@@ -1,13 +1,38 @@
 {
   "name": "@agentlens/sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK for AgentLens — observability for AI agents",
+  "description": "TypeScript SDK for AgentLens — real-time observability for AI agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "observability",
+    "tracing",
+    "llm",
+    "debugging",
+    "openai",
+    "anthropic"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aarya/agentlens"
+  },
+  "homepage": "https://github.com/aarya/agentlens#readme",
   "dependencies": {
     "ws": "^8.18.0",
     "ulid": "^2.3.0"

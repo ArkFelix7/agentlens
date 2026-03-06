@@ -8,6 +8,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -21,7 +22,7 @@ from src.utils.text_similarity import extract_numbers, normalize_number, semanti
 logger = logging.getLogger(__name__)
 
 
-def _extract_text(data_json: str | None) -> str:
+def _extract_text(data_json: Optional[str]) -> str:
     """Extract plain text from a JSON field for comparison."""
     if not data_json:
         return ""
@@ -104,7 +105,7 @@ async def run_hallucination_detection(
 
     new_alerts = []
     # Pair each llm_call with the most recent preceding tool_call
-    last_tool: TraceEvent | None = None
+    last_tool: Optional[TraceEvent] = None
     for event in events:
         if event.event_type == "tool_call" and event.status == "success":
             last_tool = event
@@ -119,9 +120,9 @@ async def run_hallucination_detection(
                 )
                 new_alerts.extend(number_alerts)
 
-                # Keyword similarity check (fast fallback — sentence-transformers skipped to avoid blocking)
+                # Semantic similarity check — runs sentence-transformers in thread pool
                 if not number_alerts:
-                    score = semantic_similarity(tool_text, llm_text)
+                    score = await semantic_similarity(tool_text, llm_text)
                     if score < 0.40:
                         new_alerts.append(HallucinationAlert(
                             id=str(ULID()),

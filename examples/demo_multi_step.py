@@ -25,9 +25,9 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'sdk-python', 'src'))
 
 try:
-    from agentlens import init, trace
-    from agentlens.client import AgentLensClient
-    from agentlens.trace import SpanContext, get_client, get_session_id
+    from agentlens_sdk import init, trace
+    from agentlens_sdk.client import AgentLensClient
+    from agentlens_sdk.trace import SpanContext, get_client, get_session_id
     from ulid import ULID
     SDK_AVAILABLE = True
 except ImportError:

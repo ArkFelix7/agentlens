@@ -1,7 +1,7 @@
 """Anthropic interceptor — monkey-patches anthropic.messages.create to auto-trace completions."""
 
 import logging
-from agentlens.trace import get_client, get_session_id, SpanContext
+from agentlens_sdk.trace import get_client, get_session_id, SpanContext
 from ulid import ULID
 
 logger = logging.getLogger(__name__)

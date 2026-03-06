@@ -1,7 +1,7 @@
 """CrewAI integration for AgentLens — patches Crew and Task execution to emit trace events.
 
 Usage:
-    from agentlens.interceptors.crewai_interceptor import instrument_crewai
+    from agentlens_sdk.interceptors.crewai_interceptor import instrument_crewai
     instrument_crewai()   # call once before building your crew
 """
 
@@ -46,7 +46,7 @@ def _patch_agent(Agent: Any) -> None:
         return
 
     def patched_execute_task(self, task: Any, *args, **kwargs) -> Any:
-        from agentlens.trace import get_client, get_session_id, SpanContext
+        from agentlens_sdk.trace import get_client, get_session_id, SpanContext
         from ulid import ULID
         try:
             client = get_client()
@@ -89,7 +89,7 @@ def _patch_task(Task: Any) -> None:
         original_init(self, *args, **kwargs)
         # Emit a decision span when a task is created (planning phase)
         try:
-            from agentlens.trace import get_client, get_session_id, SpanContext
+            from agentlens_sdk.trace import get_client, get_session_id, SpanContext
             from ulid import ULID
             client = get_client()
             session_id = get_session_id()

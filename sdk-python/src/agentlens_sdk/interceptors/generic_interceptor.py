@@ -5,7 +5,7 @@ import functools
 import logging
 from typing import Any, Callable
 
-from agentlens.trace import get_client, get_session_id, SpanContext
+from agentlens_sdk.trace import get_client, get_session_id, SpanContext
 from ulid import ULID
 
 logger = logging.getLogger(__name__)

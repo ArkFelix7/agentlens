@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'sdk-python', 'src'))
 
-from agentlens import init, trace
+from agentlens_sdk import init, trace
 
 
 async def call_openai(question: str) -> str:

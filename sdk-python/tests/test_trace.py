@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, patch
 @pytest.mark.asyncio
 async def test_trace_decorator_captures_output():
     """@trace on async function captures input/output correctly."""
-    from agentlens.trace import trace, get_client, _global_client
-    from agentlens import init
+    import sys; import agentlens_sdk.trace; trace_mod = sys.modules['agentlens_sdk.trace']
+    from agentlens_sdk.trace import trace
 
     captured_events = []
 
@@ -22,8 +22,8 @@ async def test_trace_decorator_captures_output():
         async def connect(self):
             pass
 
-    with patch("agentlens.trace._global_client", MockClient()):
-        with patch("agentlens.trace._global_session_id", "test-session"):
+    with patch.object(trace_mod, "_global_client", MockClient()):
+        with patch.object(trace_mod, "_global_session_id", "test-session"):
             @trace(name="test_func")
             async def my_func(x: int) -> str:
                 return f"result_{x}"
@@ -38,9 +38,10 @@ async def test_trace_decorator_captures_output():
 @pytest.mark.asyncio
 async def test_trace_no_exception_when_server_down():
     """@trace must not raise when server is unavailable."""
-    from agentlens.trace import trace
+    import sys; import agentlens_sdk.trace; trace_mod = sys.modules['agentlens_sdk.trace']
+    from agentlens_sdk.trace import trace
 
-    with patch("agentlens.trace._global_client", None):
+    with patch.object(trace_mod, "_global_client", None):
         @trace
         async def risky_func():
             return "ok"
@@ -53,7 +54,9 @@ async def test_trace_no_exception_when_server_down():
 @pytest.mark.asyncio
 async def test_trace_captures_error():
     """@trace records error status when function raises."""
-    from agentlens.trace import trace
+    import sys; import agentlens_sdk.trace; trace_mod = sys.modules['agentlens_sdk.trace']
+    from agentlens_sdk.trace import trace
+
     captured_events = []
 
     class MockClient:
@@ -61,8 +64,8 @@ async def test_trace_captures_error():
         async def send_event(self, event):
             captured_events.append(event)
 
-    with patch("agentlens.trace._global_client", MockClient()):
-        with patch("agentlens.trace._global_session_id", "err-session"):
+    with patch.object(trace_mod, "_global_client", MockClient()):
+        with patch.object(trace_mod, "_global_session_id", "err-session"):
             @trace
             async def failing_func():
                 raise ValueError("test error")

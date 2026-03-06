@@ -1,11 +1,14 @@
 """Text similarity utilities for hallucination detection.
 
 Uses sentence-transformers/all-MiniLM-L6-v2 for semantic similarity.
-The model is loaded lazily on first use to avoid slow server startup.
+The model is loaded lazily in a thread pool executor so it never blocks
+the asyncio event loop.
 """
 
+import asyncio
 import re
 import logging
+from functools import partial
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -14,22 +17,27 @@ logger = logging.getLogger(__name__)
 _model = None
 
 
-def get_model():
-    """Lazily load and cache the sentence-transformer model."""
+def _load_model_sync():
+    """Synchronous model loader — runs in a thread pool, not the event loop."""
     global _model
     if _model is None:
         try:
             from sentence_transformers import SentenceTransformer
             logger.info("Loading sentence-transformers model (all-MiniLM-L6-v2)...")
             _model = SentenceTransformer("all-MiniLM-L6-v2")
-            logger.info("Model loaded successfully.")
+            logger.info("Model loaded.")
         except Exception as e:
-            logger.warning(f"Could not load sentence-transformers model: {e}. Falling back to keyword similarity.")
-            _model = None
+            logger.warning(f"sentence-transformers unavailable: {e}. Using keyword similarity.")
     return _model
 
 
-def cosine_similarity(v1: list[float], v2: list[float]) -> float:
+async def _get_model_async():
+    """Async model getter — loads in executor so event loop stays unblocked."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _load_model_sync)
+
+
+def cosine_similarity(v1, v2) -> float:
     """Compute cosine similarity between two vectors."""
     try:
         import numpy as np
@@ -44,14 +52,22 @@ def cosine_similarity(v1: list[float], v2: list[float]) -> float:
         return 0.0
 
 
-def semantic_similarity(text1: str, text2: str) -> float:
-    """Compute semantic similarity between two texts. Returns 0.0–1.0.
+async def semantic_similarity(text1: str, text2: str) -> float:
+    """Async semantic similarity using sentence-transformers. Returns 0.0–1.0.
 
-    Uses keyword overlap as a fast, non-blocking fallback. Sentence-transformers
-    (all-MiniLM-L6-v2) can be enabled by calling get_model() explicitly, but it
-    spawns PyTorch threads that block the asyncio event loop on low-resource hosts.
+    Falls back to keyword overlap if the model cannot be loaded.
+    Runs model.encode() in a thread pool executor to avoid blocking the event loop.
     """
-    return keyword_similarity(text1, text2)
+    try:
+        model = await _get_model_async()
+        if model is None:
+            return keyword_similarity(text1, text2)
+        loop = asyncio.get_event_loop()
+        encode_fn = partial(model.encode, [text1, text2], convert_to_tensor=False)
+        embeddings = await loop.run_in_executor(None, encode_fn)
+        return cosine_similarity(embeddings[0].tolist(), embeddings[1].tolist())
+    except Exception:
+        return keyword_similarity(text1, text2)
 
 
 def keyword_similarity(text1: str, text2: str) -> float:

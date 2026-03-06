@@ -1,7 +1,7 @@
 """AutoGen integration for AgentLens — patches ConversableAgent to emit trace events.
 
 Usage:
-    from agentlens.interceptors.autogen_interceptor import instrument_autogen
+    from agentlens_sdk.interceptors.autogen_interceptor import instrument_autogen
     instrument_autogen()   # call once before creating agents
 """
 
@@ -59,7 +59,7 @@ def _patch_initiate_chat(Agent: Any) -> None:
         return
 
     def patched_initiate_chat(self, recipient: Any, message: Any = None, **kwargs) -> Any:
-        from agentlens.trace import get_client, get_session_id, SpanContext
+        from agentlens_sdk.trace import get_client, get_session_id, SpanContext
         from ulid import ULID
         try:
             client = get_client()
@@ -99,7 +99,7 @@ def _patch_generate_reply(Agent: Any) -> None:
         return
 
     def patched_generate_reply(self, messages: Any = None, sender: Any = None, **kwargs) -> Any:
-        from agentlens.trace import get_client, get_session_id, SpanContext
+        from agentlens_sdk.trace import get_client, get_session_id, SpanContext
         from ulid import ULID
         try:
             client = get_client()
