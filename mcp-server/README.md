@@ -1,6 +1,6 @@
 # agentlens-mcp
 
-MCP server for [AgentLens](https://github.com/aarya/agentlens) — zero-code observability for any MCP-compatible agent (Claude Desktop, Cursor, Windsurf, etc.).
+MCP server for [AgentLens](https://github.com/ArkFelix7/agentlens-oss) — zero-code observability for any MCP-compatible agent (Claude Desktop, Cursor, Windsurf, etc.).
 
 Any agent that supports MCP can send traces to AgentLens without installing the Python or TypeScript SDK.
 
