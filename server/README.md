@@ -1,6 +1,6 @@
 # agentlens-server
 
-FastAPI backend for [AgentLens](https://github.com/ArkFelix7/agentlens-oss) — real-time observability for AI agents.
+FastAPI backend for [AgentLens](https://github.com/ArkFelix7/agentlens) — real-time observability for AI agents.
 
 ## Install
 
@@ -20,7 +20,7 @@ agentlens-server
 ## Run from source
 
 ```bash
-git clone https://github.com/ArkFelix7/agentlens-oss
+git clone https://github.com/ArkFelix7/agentlens
 cd agentlens
 make install && make dev
 ```

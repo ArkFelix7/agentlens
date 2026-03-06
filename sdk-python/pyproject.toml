@@ -25,10 +25,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ArkFelix7/agentlens-oss"
-Repository = "https://github.com/ArkFelix7/agentlens-oss"
-Documentation = "https://github.com/ArkFelix7/agentlens-oss#readme"
-"Bug Tracker" = "https://github.com/ArkFelix7/agentlens-oss/issues"
+Homepage = "https://github.com/ArkFelix7/agentlens"
+Repository = "https://github.com/ArkFelix7/agentlens"
+Documentation = "https://github.com/ArkFelix7/agentlens#readme"
+"Bug Tracker" = "https://github.com/ArkFelix7/agentlens/issues"
 
 [project.optional-dependencies]
 openai = ["openai>=1.0.0"]
