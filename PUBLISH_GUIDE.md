@@ -1,7 +1,9 @@
 # AgentLens — Priority 1 Publishing Guide
 
 **Owner:** Internal only — push this file to `Agentlens_internal` only, never to the public repo.
-**Objective:** Get `pip install agentlens-sdk`, `pip install agentlens-server`, `pip install agentlens-mcp`, and `npm install @agentlens/sdk` working publicly so any developer can install in one line.
+**Objective:** Get `pip install agentlens-sdk`, `pip install agentlens-server`, `pip install agentlens-mcp`, and `npm install @agentlens-sdk/sdk` working publicly so any developer can install in one line.
+
+**npm org note:** `@agentlens` was unavailable on npm. Org `agentlens-sdk` was created instead. TypeScript SDK publishes as `@agentlens-sdk/sdk`.
 
 ---
 
@@ -12,13 +14,13 @@
 | Python SDK | `agentlens-sdk` | — | dist/ artifacts built, ready to upload |
 | Server | `agentlens-server` | — | dist/ artifacts built, ready to upload |
 | MCP Server | `agentlens-mcp` | — | not yet built, pyproject.toml now complete |
-| TypeScript SDK | — | `@agentlens/sdk` | needs `npm run build` then publish |
+| TypeScript SDK | — | `@agentlens-sdk/sdk` | needs `npm run build` then publish |
 
 **Name availability confirmed:**
 - `agentlens-sdk` on PyPI — AVAILABLE
 - `agentlens-server` on PyPI — AVAILABLE
 - `agentlens-mcp` on PyPI — AVAILABLE
-- `@agentlens/sdk` on npm — requires `@agentlens` org to be claimed first
+- `@agentlens-sdk/sdk` on npm — READY (org `agentlens-sdk` claimed 2026-03-06)
 
 ---
 
@@ -173,17 +175,14 @@ Publish in this order to avoid any circular install issues:
 
 ---
 
-## Step 3: npm Setup and Publish (`@agentlens/sdk`)
+## Step 3: npm Setup and Publish (`@agentlens-sdk/sdk`)
 
-### 3.1 Claim `@agentlens` npm organization (one-time, CRITICAL)
+### 3.1 npm org — DONE (2026-03-06)
 
-1. Log into npmjs.com
-2. Go to https://www.npmjs.com/org/create
-3. Organization name: `agentlens`
-4. Choose **Free** plan (unlimited public packages, $0)
-5. Once created, the `@agentlens` scope is yours and `npm publish` with `"publishConfig": {"access": "public"}` will work
+`@agentlens` was unavailable. Created org `agentlens-sdk` instead.
+Package published as `@agentlens-sdk/sdk`. Scope is fully claimed and ready.
 
-**If `@agentlens` is already taken:** Check if the org is active. If it appears abandoned (no packages, no activity), you can contact npm support to request transfer. As a fallback, use `@agentlens-dev/sdk` or `agentlens-sdk` (unscoped).
+No action needed here — proceed directly to 3.2.
 
 ### 3.2 Build and publish
 
@@ -219,8 +218,8 @@ npm publish
 
 **Post-publish verification:**
 ```bash
-npm install @agentlens/sdk
-node -e "const { init, trace, autoInstrument } = require('@agentlens/sdk'); console.log('OK')"
+npm install @agentlens-sdk/sdk
+node -e "const { init, trace, autoInstrument } = require('@agentlens-sdk/sdk'); console.log('OK')"
 ```
 
 ---
@@ -258,8 +257,8 @@ rm -rf /tmp/agentlens-test
 # npm verification
 mkdir /tmp/agentlens-npm-test && cd /tmp/agentlens-npm-test
 npm init -y
-npm install @agentlens/sdk
-node -e "const sdk = require('@agentlens/sdk'); console.log('TS SDK OK:', Object.keys(sdk))"
+npm install @agentlens-sdk/sdk
+node -e "const sdk = require('@agentlens-sdk/sdk'); console.log('TS SDK OK:', Object.keys(sdk))"
 cd - && rm -rf /tmp/agentlens-npm-test
 ```
 
@@ -272,7 +271,7 @@ After PyPI and npm are live, update `README.md` badges — they point to the rig
 ```markdown
 [![PyPI SDK](https://img.shields.io/pypi/v/agentlens-sdk?label=agentlens-sdk)](https://pypi.org/project/agentlens-sdk/)
 [![PyPI Server](https://img.shields.io/pypi/v/agentlens-server?label=agentlens-server)](https://pypi.org/project/agentlens-server/)
-[![npm](https://img.shields.io/npm/v/@agentlens/sdk)](https://www.npmjs.com/package/@agentlens/sdk)
+[![npm](https://img.shields.io/npm/v/@agentlens-sdk/sdk)](https://www.npmjs.com/package/@agentlens-sdk/sdk)
 ```
 
 These are already in the README. They go live automatically within 5–10 minutes of publishing.
