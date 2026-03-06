@@ -30,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ArkFelix7/agentlens"
+    "url": "git+https://github.com/ArkFelix7/agentlens.git"
   },
   "homepage": "https://github.com/ArkFelix7/agentlens#readme",
   "dependencies": {
@@ -42,8 +42,12 @@
     "@anthropic-ai/sdk": ">=0.25.0"
   },
   "peerDependenciesMeta": {
-    "openai": { "optional": true },
-    "@anthropic-ai/sdk": { "optional": true }
+    "openai": {
+      "optional": true
+    },
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
