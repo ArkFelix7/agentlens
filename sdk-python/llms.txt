@@ -1,0 +1,131 @@
+# agentlens-sdk (Python)
+
+> Python SDK for AgentLens — real-time observability for AI agents.
+
+## Install
+
+```bash
+pip install agentlens-sdk
+pip install "agentlens-sdk[openai]"       # includes openai
+pip install "agentlens-sdk[anthropic]"    # includes anthropic
+pip install "agentlens-sdk[langchain]"    # includes langchain-core
+pip install "agentlens-sdk[all]"          # all extras
+```
+
+## Public API
+
+```python
+from agentlens_sdk import (
+    init,               # connect to AgentLens server
+    trace,              # @trace decorator
+    auto_instrument,    # patch OpenAI + Anthropic automatically
+    get_tracer,         # returns the active Tracer instance
+    shutdown,           # flush and disconnect
+)
+```
+
+## Usage Patterns
+
+### Auto-instrument (recommended — zero code changes)
+
+```python
+from agentlens_sdk import auto_instrument
+auto_instrument()
+# All OpenAI and Anthropic calls are now traced automatically
+```
+
+### @trace decorator
+
+```python
+from agentlens_sdk import init, trace
+
+init(server_url="ws://localhost:8766/ws", session_name="my-agent")
+
+@trace(name="research_step")
+async def research(query: str) -> str:
+    return await call_llm(query)
+```
+
+### Manual spans
+
+```python
+from agentlens_sdk import get_tracer
+
+async with get_tracer().span("tool_call", event_type="tool_call") as span:
+    span.set_input({"query": query})
+    result = await run_tool(query)
+    span.set_output(result)
+```
+
+### LangChain
+
+```python
+from agentlens_sdk.interceptors.langchain_interceptor import AgentLensCallbackHandler
+chain = my_chain.with_config(callbacks=[AgentLensCallbackHandler()])
+```
+
+### Semantic Kernel
+
+```python
+from agentlens_sdk.interceptors.semantic_kernel_interceptor import instrument_semantic_kernel
+instrument_semantic_kernel(kernel)
+```
+
+## init() Options
+
+```python
+init(
+    server_url="ws://localhost:8766/ws",  # WebSocket URL (default)
+    http_url="http://localhost:8766",     # HTTP URL for batch ingest
+    session_name="my-agent-v2",          # shown in dashboard
+    agent_name="researcher",             # agent identifier
+    session_id="01JKXXX...",             # override auto-generated ULID
+)
+```
+
+## Design Guarantees
+
+- **Never raises** — all SDK calls are wrapped in try/except. Your agent always runs.
+- **Non-blocking** — async batched sends, <5ms overhead per call.
+- **Auto-redaction** — fields named `api_key`, `token`, `password`, `secret`, `authorization` are replaced with `[REDACTED]` before transmission.
+- **Graceful degradation** — if server is unreachable, events are silently dropped.
+- **Auto session** — ULID session ID created on first event if not provided.
+
+## Key Source Files
+
+- [src/agentlens_sdk/__init__.py](src/agentlens_sdk/__init__.py) — public API surface
+- [src/agentlens_sdk/trace.py](src/agentlens_sdk/trace.py) — `@trace` decorator, `SpanContext`, `Tracer`
+- [src/agentlens_sdk/client.py](src/agentlens_sdk/client.py) — WebSocket client, batch queue, reconnect logic
+- [src/agentlens_sdk/config.py](src/agentlens_sdk/config.py) — `AgentLensConfig` dataclass
+- [src/agentlens_sdk/interceptors/openai_interceptor.py](src/agentlens_sdk/interceptors/openai_interceptor.py)
+- [src/agentlens_sdk/interceptors/anthropic_interceptor.py](src/agentlens_sdk/interceptors/anthropic_interceptor.py)
+- [src/agentlens_sdk/interceptors/langchain_interceptor.py](src/agentlens_sdk/interceptors/langchain_interceptor.py)
+- [src/agentlens_sdk/interceptors/crewai_interceptor.py](src/agentlens_sdk/interceptors/crewai_interceptor.py)
+- [src/agentlens_sdk/interceptors/autogen_interceptor.py](src/agentlens_sdk/interceptors/autogen_interceptor.py)
+- [src/agentlens_sdk/interceptors/semantic_kernel_interceptor.py](src/agentlens_sdk/interceptors/semantic_kernel_interceptor.py)
+
+## Trace Event Fields Sent to Server
+
+```python
+{
+    "session_id": str,          # ULID
+    "event_type": str,          # llm_call | tool_call | decision | memory_read | memory_write | user_input | error
+    "event_name": str,          # human label for this step
+    "timestamp": str,           # ISO 8601 UTC
+    "duration_ms": float,
+    "model": str | None,        # e.g. "gpt-4o-mini"
+    "tokens_input": int,
+    "tokens_output": int,
+    "cost_usd": float | None,   # auto-calculated server-side if omitted
+    "input_data": any,          # serialized to JSON
+    "output_data": any,
+    "status": "success" | "error",
+    "error_message": str | None,
+    "parent_event_id": str | None,  # ULID of parent span
+    "metadata": dict | None,
+}
+```
+
+## PyPI
+
+`agentlens-sdk` — https://pypi.org/project/agentlens-sdk/

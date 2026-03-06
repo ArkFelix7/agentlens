@@ -1,0 +1,177 @@
+# agentlens-server
+
+> FastAPI backend for AgentLens — receives agent traces, serves REST API, pushes live events over WebSocket.
+
+## Install & Run
+
+```bash
+pip install agentlens-server
+agentlens-server
+# REST: http://localhost:8766/api/v1
+# WebSocket: ws://localhost:8766/ws
+```
+
+## REST API Reference
+
+Base path: `http://localhost:8766/api/v1`
+
+### Sessions
+
+| Method | Path | Body / Params | Response |
+|--------|------|---------------|----------|
+| GET | `/sessions` | — | `{"sessions": [...], "total": N}` |
+| GET | `/sessions/{id}` | — | Session object |
+| DELETE | `/sessions/{id}` | — | `{"deleted": true}` |
+
+Session object fields: `id`, `agent_name`, `status`, `created_at`, `updated_at`, `total_events`, `total_cost_usd`, `total_tokens_input`, `total_tokens_output`
+
+### Trace Events
+
+| Method | Path | Body / Params | Response |
+|--------|------|---------------|----------|
+| POST | `/traces` | `{"session_id": "...", "events": [...]}` | `{"ingested": N, "session_id": "..."}` |
+| GET | `/traces/{session_id}` | `?event_type=llm_call` | `{"events": [...]}` |
+| GET | `/traces/{session_id}/tree` | — | `{"tree": [...]}` — nested by parent_event_id |
+
+`event_type` filter values: `llm_call`, `tool_call`, `decision`, `memory_read`, `memory_write`, `user_input`, `error`
+
+Trace event ingest schema:
+```json
+{
+  "session_id": "string (ULID)",
+  "event_type": "llm_call",
+  "event_name": "string",
+  "timestamp": "2026-03-06T12:00:00Z",
+  "duration_ms": 0.0,
+  "model": "gpt-4o-mini",
+  "tokens_input": 0,
+  "tokens_output": 0,
+  "cost_usd": null,
+  "input_data": null,
+  "output_data": null,
+  "status": "success",
+  "error_message": null,
+  "parent_event_id": null,
+  "metadata": null,
+  "id": null
+}
+```
+
+- `id` — omit to auto-generate a ULID
+- `cost_usd` — omit to auto-calculate from `model` + token counts
+- `session_id` — session is auto-created on first ingest if it doesn't exist
+
+### Costs
+
+| Method | Path | Response |
+|--------|------|----------|
+| GET | `/costs/{session_id}` | `{"total_usd": 0.0, "by_model": {"gpt-4o": 0.0, ...}, "events": [...]}` |
+| GET | `/costs/{session_id}/hotspots` | `{"hotspots": [{"event_name": "...", "cost_usd": 0.0, ...}]}` — sorted desc |
+| GET | `/costs/{session_id}/suggestions` | `{"suggestions": [{"model": "...", "alternative": "...", "savings_usd": 0.0}]}` |
+
+Supported models with auto-pricing: `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-4`, `gpt-3.5-turbo`, `o1`, `o1-mini`, `o3-mini`, `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`, `claude-3-5-sonnet-20241022`, `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-2.0-flash`, `llama-3.1-70b`, `llama-3.1-8b`, `mistral-large`, `mistral-small`
+
+### Hallucination Detection
+
+| Method | Path | Body | Response |
+|--------|------|------|----------|
+| POST | `/hallucinations/check` | `{"session_id": "..."}` | `{"alerts": [...], "summary": {"total": 0, "critical": 0, "warning": 0, "info": 0}}` |
+| GET | `/hallucinations/{session_id}` | — | same shape as above |
+
+Detection logic: pairs each `llm_call` event with the most recent preceding `tool_call`. Checks for number transpositions (e.g. `$2.3M` → `$3.2M`) and semantic drift (sentence-transformers cosine similarity < 0.40).
+
+Alert severity: `critical` (digit transposition), `warning` (number mismatch), `info` (semantic drift)
+
+### Memory
+
+| Method | Path | Body | Response |
+|--------|------|------|----------|
+| POST | `/memory` | MemoryEntryCreate | MemoryEntryResponse |
+| GET | `/memory/{session_id}` | — | `{"entries": [...]}` |
+| GET | `/memory/{session_id}/{key}` | — | `{"current": {...}, "history": [...]}` |
+| PATCH | `/memory/entry/{id}` | `{"content": "new content"}` | MemoryEntryResponse |
+| DELETE | `/memory/entry/{id}` | — | 204 No Content |
+
+MemoryEntryCreate fields: `session_id`, `memory_key`, `content`, `action` (`created`/`updated`/`accessed`/`deleted`), `agent_id` (optional), `influenced_events` (optional list of event IDs), `metadata` (optional dict)
+
+Version is auto-incremented per `(session_id, memory_key)` pair.
+
+### Replay
+
+| Method | Path | Response |
+|--------|------|----------|
+| GET | `/replay/{session_id}` | `{"events": [...]}` — chronological, includes timing deltas for playback |
+
+### Health
+
+| Method | Path | Response |
+|--------|------|----------|
+| GET | `/health` | `{"status": "healthy"}` |
+| GET | `/` | `{"service": "AgentLens Server", "version": "0.1.0"}` |
+
+## WebSocket Protocol
+
+Connect to `ws://localhost:8766/ws`.
+
+**Step 1 — Identify role:**
+```json
+{ "type": "hello", "role": "sdk" }
+```
+or
+```json
+{ "type": "hello", "role": "dashboard" }
+```
+
+**SDK role** — send trace events:
+```json
+{
+  "type": "trace_event",
+  "data": { ...TraceEventCreate fields... }
+}
+```
+
+**Dashboard role** — receive live pushes:
+- `{"type": "trace_event", "data": {...}}`
+- `{"type": "memory_update", "data": {...}}`
+- `{"type": "hallucination_alert", "data": {...}}`
+- `{"type": "session_start", "data": {"session_id": "..."}}`
+
+Dashboard can also send:
+```json
+{ "type": "get_sessions" }
+```
+and receive:
+```json
+{ "type": "sessions_list", "data": {"sessions": [...]} }
+```
+
+## Configuration (environment variables)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite+aiosqlite:///agentlens.db` | SQLAlchemy async DB URL |
+| `HOST` | `0.0.0.0` | Bind address |
+| `PORT` | `8766` | Port |
+| `CORS_ORIGINS` | `["*"]` | Allowed CORS origins (JSON list) |
+| `DEBUG` | `false` | SQLAlchemy echo |
+
+## Key Source Files
+
+- [src/main.py](src/main.py) — app factory, lifespan, WebSocket endpoint, CORS
+- [src/routers/traces.py](src/routers/traces.py)
+- [src/routers/sessions.py](src/routers/sessions.py)
+- [src/routers/costs.py](src/routers/costs.py)
+- [src/routers/hallucinations.py](src/routers/hallucinations.py)
+- [src/routers/memory.py](src/routers/memory.py)
+- [src/services/trace_service.py](src/services/trace_service.py)
+- [src/services/cost_service.py](src/services/cost_service.py)
+- [src/services/hallucination_service.py](src/services/hallucination_service.py)
+- [src/services/memory_service.py](src/services/memory_service.py)
+- [src/utils/pricing.py](src/utils/pricing.py) — MODEL_PRICING dict
+- [src/utils/text_similarity.py](src/utils/text_similarity.py) — async semantic_similarity()
+- [src/websocket/manager.py](src/websocket/manager.py) — connection registry + broadcast
+- [src/database.py](src/database.py) — async SQLAlchemy engine, get_db dependency
+
+## PyPI
+
+`agentlens-server` — https://pypi.org/project/agentlens-server/
