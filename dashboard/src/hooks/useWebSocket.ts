@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useWebSocketStore } from '@/stores/websocketStore';
 import { useTraceStore } from '@/stores/traceStore';
 import { useSessionStore } from '@/stores/sessionStore';
-import { WSMessage, TraceEvent, Session, MemoryEntry, HallucinationAlert } from '@/types';
+import { WSMessage, TraceEvent, Session } from '@/types';
 
 const RECONNECT_DELAY = 5000;
 
@@ -14,8 +14,8 @@ export function useWebSocket() {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { wsUrl, autoConnect } = useSettingsStore();
   const { setStatus, incrementReconnects, resetReconnects } = useWebSocketStore();
-  const { addEvent, addEvents, setEvents } = useTraceStore();
-  const { setSessions, addSession, setActiveSession } = useSessionStore();
+  const { addEvent, setEvents } = useTraceStore();
+  const { setSessions, addSession, removeSession } = useSessionStore();
 
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
@@ -42,6 +42,10 @@ export function useWebSocket() {
           if (events) setEvents(events);
           break;
         }
+        case 'session_cleared': {
+          if (msg.session_id) removeSession(msg.session_id);
+          break;
+        }
         case 'ping': {
           wsRef.current?.send(JSON.stringify({ type: 'pong' }));
           break;
@@ -52,7 +56,7 @@ export function useWebSocket() {
     } catch (e) {
       console.warn('[AgentLens WS] Failed to parse message:', e);
     }
-  }, [addEvent, addEvents, setEvents, setSessions, addSession]);
+  }, [addEvent, setEvents, setSessions, addSession, removeSession]);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;

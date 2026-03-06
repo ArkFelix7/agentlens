@@ -165,6 +165,7 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
     from fastapi import WebSocketDisconnect
     from src.database import AsyncSessionLocal
     from src.services import trace_service, memory_service
+    from src.services.session_service import create_or_update_session
     from src.schemas.trace import TraceEventCreate
     from src.schemas.memory import MemoryEntryCreate
 
@@ -196,7 +197,13 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
                         except Exception as e:
                             logger.error(f"Failed to ingest trace_events: {e}")
                 elif msg_type == "session_start":
-                    await manager.broadcast_to_dashboards({"type": "session_start", "data": msg.get("data", {})})
+                    data = msg.get("data", {})
+                    sid = data.get("session_id")
+                    aname = data.get("agent_name", "agent")
+                    if sid:
+                        session_resp = await create_or_update_session(db, sid, aname)
+                        data = session_resp.model_dump()
+                    await manager.broadcast_to_dashboards({"type": "session_start", "data": data})
                 elif msg_type == "session_end":
                     await manager.broadcast_to_dashboards({"type": "session_end", "data": msg.get("data", {})})
                 elif msg_type == "memory_update":

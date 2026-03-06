@@ -79,6 +79,7 @@ def init(
     )
     _global_session_id = session_id or str(ULID())
     _global_client._session_id = _global_session_id
+    _global_client._agent_name = agent_name or "agent"
 
     # Connect asynchronously (non-blocking)
     try:

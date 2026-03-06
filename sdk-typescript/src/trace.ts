@@ -106,12 +106,39 @@ export function trace<T extends (...args: unknown[]) => unknown>(
   const eventName = options.name || fn.name || 'anonymous';
   const eventType: EventType = options.eventType || 'decision';
 
-  const wrapper = async (...args: unknown[]): Promise<unknown> => {
+  // Detect if the original function is async
+  const isAsync = fn.constructor?.name === 'AsyncFunction' ||
+    (typeof fn === 'function' && fn.toString().startsWith('async '));
+
+  if (isAsync) {
+    const asyncWrapper = async (...args: unknown[]): Promise<unknown> => {
+      const client = globalClient;
+      const sessionId = globalSessionId || ulid();
+      const span = new SpanContext(eventType, eventName, sessionId, client);
+      try {
+        const result = await (fn as (...a: unknown[]) => Promise<unknown>)(...args);
+        if (result !== null && result !== undefined && typeof result !== 'object') {
+          span.setOutput({ result: String(result) });
+        } else if (result && typeof result === 'object') {
+          span.setOutput(result as Record<string, unknown>);
+        }
+        return result;
+      } catch (e) {
+        span.setError(e instanceof Error ? e.message : String(e));
+        throw e;
+      } finally {
+        span.end();
+      }
+    };
+    return asyncWrapper as unknown as T;
+  }
+
+  const syncWrapper = (...args: unknown[]): unknown => {
     const client = globalClient;
     const sessionId = globalSessionId || ulid();
     const span = new SpanContext(eventType, eventName, sessionId, client);
     try {
-      const result = await (fn as (...a: unknown[]) => Promise<unknown>)(...args);
+      const result = (fn as (...a: unknown[]) => unknown)(...args);
       if (result !== null && result !== undefined && typeof result !== 'object') {
         span.setOutput({ result: String(result) });
       } else if (result && typeof result === 'object') {
@@ -126,5 +153,5 @@ export function trace<T extends (...args: unknown[]) => unknown>(
     }
   };
 
-  return wrapper as unknown as T;
+  return syncWrapper as unknown as T;
 }

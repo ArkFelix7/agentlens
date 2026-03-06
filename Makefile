@@ -6,7 +6,7 @@ install:
 	cd dashboard && npm install
 	cd server && pip install -e ".[dev]" --break-system-packages
 	cd sdk-python && pip install -e ".[dev]" --break-system-packages
-	cd sdk-typescript && npm install
+	cd sdk-typescript && npm install && npm run build
 	cd mcp-server && pip install -e . --break-system-packages
 
 dev:

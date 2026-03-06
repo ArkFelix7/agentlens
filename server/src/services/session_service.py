@@ -36,6 +36,29 @@ def _orm_to_response(session: Session) -> SessionResponse:
     )
 
 
+async def create_or_update_session(
+    db: AsyncSession,
+    session_id: str,
+    agent_name: str,
+) -> SessionResponse:
+    """Create a session with the given agent_name, or update agent_name if already exists."""
+    result = await db.execute(select(Session).where(Session.id == session_id))
+    session = result.scalar_one_or_none()
+    if session is None:
+        session = Session(
+            id=session_id,
+            agent_name=agent_name,
+            status="active",
+            started_at=datetime.now(timezone.utc),
+        )
+        db.add(session)
+    elif session.agent_name in ("unnamed", "agent", None):
+        session.agent_name = agent_name
+    await db.commit()
+    await db.refresh(session)
+    return _orm_to_response(session)
+
+
 async def create_session(db: AsyncSession, data: SessionCreate) -> SessionResponse:
     """Create a new session."""
     session_id = data.id or str(ULID())
