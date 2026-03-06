@@ -1,0 +1,121 @@
+# AgentLens
+
+> Real-time observability and debugging dashboard for AI agents. Chrome DevTools for AI agents.
+
+AgentLens is an open-source monorepo. Install two packages and add one line of code to see every LLM call, tool execution, memory operation, cost, and hallucination your agent makes — in a live dashboard.
+
+## Packages
+
+- [Python SDK](sdk-python/README.md): `pip install agentlens-sdk` — trace Python agents
+- [Server](server/README.md): `pip install agentlens-server` — backend + REST + WebSocket
+- [TypeScript SDK](sdk-typescript/README.md): `npm install @agentlens-sdk/sdk` — trace Node.js agents
+- [MCP Server](mcp-server/README.md): `pip install agentlens-mcp` — zero-code Claude Desktop integration
+- [Dashboard](dashboard/): React frontend, `npm run dev` on port 5173
+
+## Quick Start
+
+```bash
+pip install agentlens-server agentlens-sdk
+agentlens-server &          # REST: http://localhost:8766  |  WS: ws://localhost:8766/ws
+```
+
+```python
+from agentlens_sdk import auto_instrument
+auto_instrument()           # patches OpenAI + Anthropic automatically — no other changes needed
+```
+
+Open `http://localhost:5173` and run your agent.
+
+## Architecture
+
+- **Server** runs on a single port (8766): REST at `/api/v1/*`, WebSocket at `/ws`
+- **WebSocket protocol**: client sends `{"type":"hello","role":"sdk|dashboard"}` first; server echoes back then pushes live events
+- **Database**: SQLite (`agentlens.db`), auto-created on first run, no migrations needed
+- **IDs**: all identifiers are ULIDs (26-char base32, sortable by time)
+- **Timestamps**: ISO 8601 UTC throughout
+- **JSON fields** in DB stored as TEXT, serialized/deserialized in the service layer
+
+## Key Source Files
+
+- [server/src/main.py](server/src/main.py) — FastAPI app, WebSocket handlers, startup
+- [server/src/routers/](server/src/routers/) — traces, sessions, costs, hallucinations, memory, replay
+- [server/src/services/](server/src/services/) — business logic for each domain
+- [server/src/schemas/](server/src/schemas/) — Pydantic request/response models
+- [server/src/utils/pricing.py](server/src/utils/pricing.py) — per-model token pricing table
+- [server/src/utils/text_similarity.py](server/src/utils/text_similarity.py) — sentence-transformers + keyword fallback
+- [server/src/services/hallucination_service.py](server/src/services/hallucination_service.py) — number-transposition and semantic drift detection
+- [sdk-python/src/agentlens_sdk/__init__.py](sdk-python/src/agentlens_sdk/__init__.py) — Python SDK public API
+- [sdk-python/src/agentlens_sdk/trace.py](sdk-python/src/agentlens_sdk/trace.py) — @trace decorator and SpanContext
+- [sdk-python/src/agentlens_sdk/interceptors/](sdk-python/src/agentlens_sdk/interceptors/) — OpenAI, Anthropic, LangChain, CrewAI, AutoGen, Semantic Kernel patches
+- [sdk-typescript/src/index.ts](sdk-typescript/src/index.ts) — TypeScript SDK public API
+- [dashboard/src/](dashboard/src/) — React 18 + Vite + Zustand + D3.js + Recharts frontend
+
+## REST API (server)
+
+All endpoints prefixed `/api/v1/`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/sessions` | List sessions |
+| GET | `/sessions/{id}` | Session detail |
+| DELETE | `/sessions/{id}` | Delete session |
+| POST | `/traces` | Ingest batch of trace events |
+| GET | `/traces/{session_id}` | Get events (optional `?event_type=llm_call`) |
+| GET | `/traces/{session_id}/tree` | Events as nested tree |
+| GET | `/costs/{session_id}` | Cost breakdown by model |
+| GET | `/costs/{session_id}/hotspots` | Most expensive steps |
+| GET | `/costs/{session_id}/suggestions` | Cheaper model suggestions |
+| POST | `/hallucinations/check` | Run hallucination detection `{"session_id":"..."}` |
+| GET | `/hallucinations/{session_id}` | Existing alerts |
+| POST | `/memory` | Create memory entry |
+| GET | `/memory/{session_id}` | List memory entries |
+| GET | `/memory/{session_id}/{key}` | Key + version history |
+| PATCH | `/memory/entry/{id}` | Edit memory content |
+| DELETE | `/memory/entry/{id}` | Delete memory entry |
+| GET | `/replay/{session_id}` | Ordered event stream for replay |
+| GET | `/health` | `{"status":"healthy"}` |
+
+## Trace Event Schema
+
+```json
+{
+  "session_id": "01JKXXXXXXXXXXXXXXXXXXXXXXXX",
+  "event_type": "llm_call",
+  "event_name": "summarize",
+  "timestamp": "2026-03-06T12:00:00Z",
+  "duration_ms": 340.0,
+  "model": "gpt-4o-mini",
+  "tokens_input": 512,
+  "tokens_output": 128,
+  "cost_usd": 0.000154,
+  "input_data": {"messages": [...]},
+  "output_data": {"content": "..."},
+  "status": "success",
+  "parent_event_id": null
+}
+```
+
+`event_type` values: `llm_call`, `tool_call`, `decision`, `memory_read`, `memory_write`, `user_input`, `error`
+
+`cost_usd` is auto-calculated from `model` + token counts if omitted.
+
+## Supported Frameworks
+
+| Framework | How |
+|-----------|-----|
+| OpenAI | `auto_instrument()` patches `AsyncOpenAI` / `OpenAI` |
+| Anthropic | `auto_instrument()` patches `AsyncAnthropic` / `Anthropic` |
+| LangChain | `AgentLensCallbackHandler` callback |
+| CrewAI | `auto_instrument()` auto-detects and wraps agents |
+| AutoGen | `auto_instrument()` auto-detects `ConversableAgent` |
+| Semantic Kernel | `instrument_semantic_kernel(kernel)` |
+| Any Python | `@trace(name="step")` decorator |
+| TypeScript | `trace(fn, { name: "step" })` wrapper |
+| MCP agents | `agentlens-mcp` stdio server, zero code |
+
+## Optional: llms-full.txt
+
+For full API docs, schema definitions, and implementation details see individual package llms.txt files:
+- [sdk-python/llms.txt](sdk-python/llms.txt)
+- [sdk-typescript/llms.txt](sdk-typescript/llms.txt)
+- [server/llms.txt](server/llms.txt)

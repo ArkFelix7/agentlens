@@ -1,0 +1,121 @@
+# @agentlens-sdk/sdk (TypeScript)
+
+> TypeScript/Node.js SDK for AgentLens — real-time observability for AI agents.
+
+## Install
+
+```bash
+npm install @agentlens-sdk/sdk
+npm install @agentlens-sdk/sdk openai             # with OpenAI
+npm install @agentlens-sdk/sdk @anthropic-ai/sdk  # with Anthropic
+```
+
+## Public API
+
+```typescript
+import {
+  init,            // connect to AgentLens server
+  trace,           // wrap a function for tracing
+  autoInstrument,  // patch OpenAI + Anthropic automatically
+  shutdown,        // flush and close connection
+  SpanContext,     // class for manual span management
+} from '@agentlens-sdk/sdk';
+```
+
+## Usage Patterns
+
+### Auto-instrument (recommended)
+
+```typescript
+import { autoInstrument } from '@agentlens-sdk/sdk';
+await autoInstrument();  // patches OpenAI + Anthropic — no other changes needed
+
+import OpenAI from 'openai';
+const openai = new OpenAI();
+// All completions.create() calls are now traced automatically
+```
+
+### trace() wrapper
+
+```typescript
+import { init, trace } from '@agentlens-sdk/sdk';
+
+await init({ serverUrl: 'ws://localhost:8766/ws', agentName: 'my-agent' });
+
+const myAgent = trace(
+  async (query: string) => {
+    const result = await callLLM(query);
+    return result;
+  },
+  { name: 'my_agent', eventType: 'llm_call' }
+);
+
+const answer = await myAgent('What is the capital of France?');
+```
+
+### Manual spans (SpanContext)
+
+```typescript
+import { SpanContext } from '@agentlens-sdk/sdk';
+
+const span = new SpanContext({ name: 'tool_call', eventType: 'tool_call' });
+span.setInput({ query });
+const result = await runTool(query);
+span.setOutput(result);
+await span.end();
+```
+
+## init() Options
+
+```typescript
+await init({
+  serverUrl: 'ws://localhost:8766/ws',  // WebSocket URL
+  httpUrl: 'http://localhost:8766',     // HTTP URL
+  agentName: 'my-agent',               // shown in dashboard
+  sessionId: '01JKXXX...',             // override auto-generated ULID
+});
+```
+
+## Design Guarantees
+
+- **Never throws** — all SDK operations are wrapped in try/catch.
+- **Non-blocking** — buffered async sends.
+- **Graceful degradation** — if server is unreachable, events are silently dropped.
+- **Auto session** — ULID session ID created on `init()` if not provided.
+
+## Key Source Files
+
+- [src/index.ts](src/index.ts) — public API: `init`, `autoInstrument`, `shutdown`
+- [src/trace.ts](src/trace.ts) — `trace()` wrapper, `SpanContext` class
+- [src/client.ts](src/client.ts) — WebSocket client, queue, reconnect
+- [src/config.ts](src/config.ts) — `AgentLensConfig` interface
+- [src/types.ts](src/types.ts) — `TraceEventData`, `InitOptions`, `EventType`, `EventStatus`
+- [src/interceptors/openai.ts](src/interceptors/openai.ts) — OpenAI patch
+- [src/interceptors/anthropic.ts](src/interceptors/anthropic.ts) — Anthropic patch
+- [src/interceptors/generic.ts](src/interceptors/generic.ts) — generic function wrapper
+
+## Trace Event Shape (TypeScript)
+
+```typescript
+interface TraceEventData {
+  session_id: string;       // ULID
+  event_type: EventType;    // 'llm_call' | 'tool_call' | 'decision' | 'memory_read' | 'memory_write' | 'user_input' | 'error'
+  event_name: string;
+  timestamp: string;        // ISO 8601 UTC
+  duration_ms: number;
+  model?: string;
+  tokens_input: number;
+  tokens_output: number;
+  cost_usd?: number;        // auto-calculated server-side if omitted
+  input_data?: unknown;
+  output_data?: unknown;
+  status: EventStatus;      // 'success' | 'error'
+  error_message?: string;
+  parent_event_id?: string; // ULID of parent span
+  metadata?: Record<string, unknown>;
+}
+```
+
+## npm
+
+`@agentlens-sdk/sdk` — https://www.npmjs.com/package/@agentlens-sdk/sdk
