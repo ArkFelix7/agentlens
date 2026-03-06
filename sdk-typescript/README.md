@@ -1,18 +1,18 @@
-# @agentlens/sdk
+# @agentlens-sdk/sdk
 
 TypeScript/Node.js SDK for [AgentLens](https://github.com/ArkFelix7/agentlens) — real-time observability and debugging for AI agents.
 
 ## Install
 
 ```bash
-npm install @agentlens/sdk
+npm install @agentlens-sdk/sdk
 ```
 
 With peer dependencies for your AI provider:
 
 ```bash
-npm install @agentlens/sdk openai                  # for OpenAI
-npm install @agentlens/sdk @anthropic-ai/sdk       # for Anthropic
+npm install @agentlens-sdk/sdk openai                  # for OpenAI
+npm install @agentlens-sdk/sdk @anthropic-ai/sdk       # for Anthropic
 ```
 
 ## Prerequisites
@@ -32,7 +32,7 @@ Then open the dashboard at `http://localhost:5173`.
 ### Option 1: Auto-instrument (recommended)
 
 ```typescript
-import { autoInstrument } from '@agentlens/sdk';
+import { autoInstrument } from '@agentlens-sdk/sdk';
 
 autoInstrument(); // patches OpenAI + Anthropic Node SDKs
 
@@ -45,7 +45,7 @@ const response = await client.chat.completions.create({ ... });
 ### Option 2: trace() wrapper
 
 ```typescript
-import { init, trace } from '@agentlens/sdk';
+import { init, trace } from '@agentlens-sdk/sdk';
 
 init({ serverUrl: 'ws://localhost:8766/ws' });
 
@@ -61,7 +61,7 @@ const myAgent = trace(
 ## Configuration
 
 ```typescript
-import { init } from '@agentlens/sdk';
+import { init } from '@agentlens-sdk/sdk';
 
 init({
   serverUrl: 'ws://localhost:8766/ws',   // AgentLens server WebSocket URL
