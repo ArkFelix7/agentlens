@@ -1,7 +1,7 @@
 """Tests for the cost calculation engine."""
 
 import pytest
-from src.utils.pricing import calculate_cost, MODEL_PRICING
+from agentlens_server.utils.pricing import calculate_cost, MODEL_PRICING
 
 
 def test_gpt4o_cost():
