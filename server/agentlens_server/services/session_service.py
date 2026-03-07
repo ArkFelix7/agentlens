@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from ulid import ULID
 
-from src.models.session import Session
-from src.schemas.session import SessionCreate, SessionResponse, SessionListResponse
+from agentlens_server.models.session import Session
+from agentlens_server.schemas.session import SessionCreate, SessionResponse, SessionListResponse
 
 logger = logging.getLogger(__name__)
 

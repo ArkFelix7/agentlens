@@ -8,11 +8,11 @@ import json
 import logging
 from fastapi import WebSocket, WebSocketDisconnect
 
-from src.websocket.manager import manager
-from src.database import AsyncSessionLocal
-from src.services import trace_service, memory_service
-from src.schemas.trace import TraceEventCreate, TraceIngestRequest
-from src.schemas.memory import MemoryEntryCreate
+from agentlens_server.websocket.manager import manager
+from agentlens_server.database import AsyncSessionLocal
+from agentlens_server.services import trace_service, memory_service
+from agentlens_server.schemas.trace import TraceEventCreate, TraceIngestRequest
+from agentlens_server.schemas.memory import MemoryEntryCreate
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def handle_dashboard_client(ws: WebSocket) -> None:
 
             async with AsyncSessionLocal() as db:
                 if msg_type == "get_sessions":
-                    from src.services.session_service import get_sessions
+                    from agentlens_server.services.session_service import get_sessions
                     sessions = await get_sessions(db)
                     await manager.send_to_client(ws, {
                         "type": "sessions_list",
@@ -53,7 +53,7 @@ async def handle_dashboard_client(ws: WebSocket) -> None:
                 elif msg_type == "clear_session":
                     session_id = msg.get("session_id")
                     if session_id:
-                        from src.services.session_service import delete_session
+                        from agentlens_server.services.session_service import delete_session
                         await delete_session(db, session_id)
                         await manager.send_to_client(ws, {
                             "type": "session_cleared",

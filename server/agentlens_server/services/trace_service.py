@@ -9,10 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from ulid import ULID
 
-from src.models.trace_event import TraceEvent
-from src.models.session import Session
-from src.schemas.trace import TraceEventCreate, TraceEventResponse, TraceEventTreeNode
-from src.utils.pricing import calculate_cost
+from agentlens_server.models.trace_event import TraceEvent
+from agentlens_server.models.session import Session
+from agentlens_server.schemas.trace import TraceEventCreate, TraceEventResponse, TraceEventTreeNode
+from agentlens_server.utils.pricing import calculate_cost
 
 logger = logging.getLogger(__name__)
 

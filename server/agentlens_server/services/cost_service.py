@@ -5,12 +5,12 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.models.trace_event import TraceEvent
-from src.schemas.cost import (
+from agentlens_server.models.trace_event import TraceEvent
+from agentlens_server.schemas.cost import (
     CostBreakdown, ModelCostDetail, StepCost, CostTimelinePoint,
     CostHotspot, CostHotspotsResponse, CostSuggestion, CostSuggestionsResponse,
 )
-from src.utils.pricing import calculate_cost, get_cheaper_alternative, estimate_savings, estimate_savings_pct
+from agentlens_server.utils.pricing import calculate_cost, get_cheaper_alternative, estimate_savings, estimate_savings_pct
 
 logger = logging.getLogger(__name__)
 

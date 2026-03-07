@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
-from src.database import get_db
-from src.schemas.trace import TraceIngestRequest, TraceIngestResponse, TraceEventResponse, TraceEventTreeNode
-from src.services import trace_service
-from src.websocket.manager import manager
+from agentlens_server.database import get_db
+from agentlens_server.schemas.trace import TraceIngestRequest, TraceIngestResponse, TraceEventResponse, TraceEventTreeNode
+from agentlens_server.services import trace_service
+from agentlens_server.websocket.manager import manager
 
 router = APIRouter(prefix="/traces", tags=["traces"])
 

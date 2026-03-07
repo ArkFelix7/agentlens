@@ -3,13 +3,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db
-from src.schemas.hallucination import (
+from agentlens_server.database import get_db
+from agentlens_server.schemas.hallucination import (
     HallucinationListResponse,
     HallucinationCheckRequest,
 )
-from src.services import hallucination_service
-from src.websocket.manager import manager
+from agentlens_server.services import hallucination_service
+from agentlens_server.websocket.manager import manager
 
 router = APIRouter(prefix="/hallucinations", tags=["hallucinations"])
 

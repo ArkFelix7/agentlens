@@ -4,9 +4,9 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.models.trace_event import TraceEvent
-from src.schemas.trace import TraceEventResponse
-from src.services.trace_service import _orm_to_response
+from agentlens_server.models.trace_event import TraceEvent
+from agentlens_server.schemas.trace import TraceEventResponse
+from agentlens_server.services.trace_service import _orm_to_response
 
 logger = logging.getLogger(__name__)
 
