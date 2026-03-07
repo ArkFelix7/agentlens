@@ -3,9 +3,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db
-from src.schemas.cost import CostBreakdown, CostHotspotsResponse, CostSuggestionsResponse
-from src.services import cost_service
+from agentlens_server.database import get_db
+from agentlens_server.schemas.cost import CostBreakdown, CostHotspotsResponse, CostSuggestionsResponse
+from agentlens_server.services import cost_service
 
 router = APIRouter(prefix="/costs", tags=["costs"])
 

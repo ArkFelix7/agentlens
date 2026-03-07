@@ -14,10 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ulid import ULID
 
-from src.models.trace_event import TraceEvent
-from src.models.hallucination_alert import HallucinationAlert
-from src.schemas.hallucination import HallucinationAlertResponse, HallucinationSummary, HallucinationListResponse
-from src.utils.text_similarity import extract_numbers, normalize_number, semantic_similarity
+from agentlens_server.models.trace_event import TraceEvent
+from agentlens_server.models.hallucination_alert import HallucinationAlert
+from agentlens_server.schemas.hallucination import HallucinationAlertResponse, HallucinationSummary, HallucinationListResponse
+from agentlens_server.utils.text_similarity import extract_numbers, normalize_number, semantic_similarity
 
 logger = logging.getLogger(__name__)
 

@@ -14,12 +14,12 @@ dev:
 	@echo "Dashboard: http://localhost:5173"
 	@echo "Server API: http://localhost:8766"
 	@echo "Server WS:  ws://localhost:8766/ws"
-	cd server && uvicorn src.main:app --host 0.0.0.0 --port 8766 --reload &
+	cd server && uvicorn agentlens_server.main:app --host 0.0.0.0 --port 8766 --reload &
 	cd dashboard && npm run dev &
 	wait
 
 server:
-	cd server && uvicorn src.main:app --host 0.0.0.0 --port 8766 --reload
+	cd server && uvicorn agentlens_server.main:app --host 0.0.0.0 --port 8766 --reload
 
 dashboard:
 	cd dashboard && npm run dev

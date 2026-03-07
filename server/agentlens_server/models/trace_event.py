@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, Float, DateTime, Text, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
-from src.database import Base
+from agentlens_server.database import Base
 
 
 class TraceEvent(Base):

@@ -3,10 +3,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db
-from src.schemas.memory import MemoryEntryCreate, MemoryEntryUpdate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
-from src.services import memory_service
-from src.websocket.manager import manager
+from agentlens_server.database import get_db
+from agentlens_server.schemas.memory import MemoryEntryCreate, MemoryEntryUpdate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
+from agentlens_server.services import memory_service
+from agentlens_server.websocket.manager import manager
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 

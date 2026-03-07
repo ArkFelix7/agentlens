@@ -15,11 +15,11 @@ import uvicorn
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.config import settings
-from src.database import create_all_tables
-from src.websocket.manager import manager
-from src.websocket.handlers import handle_dashboard_client
-from src.routers import traces, sessions, costs, hallucinations, memory
+from agentlens_server.config import settings
+from agentlens_server.database import create_all_tables
+from agentlens_server.websocket.manager import manager
+from agentlens_server.websocket.handlers import handle_dashboard_client
+from agentlens_server.routers import traces, sessions, costs, hallucinations, memory
 
 logging.basicConfig(
     level=logging.INFO,
@@ -112,9 +112,9 @@ async def _handle_dashboard_after_accept(ws: WebSocket) -> None:
     """Handle a dashboard client that has already been accepted."""
     import json
     from fastapi import WebSocketDisconnect
-    from src.database import AsyncSessionLocal
-    from src.services import trace_service
-    from src.services.session_service import get_sessions, delete_session
+    from agentlens_server.database import AsyncSessionLocal
+    from agentlens_server.services import trace_service
+    from agentlens_server.services.session_service import get_sessions, delete_session
 
     try:
         while True:
@@ -164,11 +164,11 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
     """Handle an SDK client that has already been accepted."""
     import json
     from fastapi import WebSocketDisconnect
-    from src.database import AsyncSessionLocal
-    from src.services import trace_service, memory_service
-    from src.services.session_service import create_or_update_session
-    from src.schemas.trace import TraceEventCreate
-    from src.schemas.memory import MemoryEntryCreate
+    from agentlens_server.database import AsyncSessionLocal
+    from agentlens_server.services import trace_service, memory_service
+    from agentlens_server.services.session_service import create_or_update_session
+    from agentlens_server.schemas.trace import TraceEventCreate
+    from agentlens_server.schemas.memory import MemoryEntryCreate
 
     try:
         while True:
@@ -227,7 +227,7 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
 def run() -> None:
     """CLI entrypoint: agentlens-server"""
     uvicorn.run(
-        "src.main:app",
+        "agentlens_server.main:app",
         host="0.0.0.0",
         port=8766,
         reload=False,

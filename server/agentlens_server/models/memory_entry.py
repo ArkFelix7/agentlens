@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
-from src.database import Base
+from agentlens_server.database import Base
 
 
 class MemoryEntry(Base):

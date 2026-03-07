@@ -9,9 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ulid import ULID
 
-from src.models.memory_entry import MemoryEntry
-from src.models.session import Session
-from src.schemas.memory import MemoryEntryCreate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
+from agentlens_server.models.memory_entry import MemoryEntry
+from agentlens_server.models.session import Session
+from agentlens_server.schemas.memory import MemoryEntryCreate, MemoryEntryResponse, MemoryListResponse, MemoryKeyResponse
 
 logger = logging.getLogger(__name__)
 
