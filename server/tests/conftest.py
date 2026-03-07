@@ -6,8 +6,8 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from src.main import app
-from src.database import Base, get_db
+from agentlens_server.main import app
+from agentlens_server.database import Base, get_db
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 

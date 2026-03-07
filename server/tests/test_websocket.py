@@ -11,7 +11,7 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from httpx_ws import aconnect_ws
 
-from src.main import app
+from agentlens_server.main import app
 
 
 @pytest_asyncio.fixture
