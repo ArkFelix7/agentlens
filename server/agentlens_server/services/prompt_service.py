@@ -44,29 +44,36 @@ def _prompt_to_response(p: Prompt, versions: list[PromptVersion]) -> PromptRespo
 
 async def create_prompt(body: PromptCreate, db: DBSession) -> PromptResponse:
     prompt_id = new_ulid()
+    initial_version = 1 if body.initial_content else 0
     prompt = Prompt(
         id=prompt_id,
         name=body.name,
         description=body.description,
-        current_version=1,
+        current_version=initial_version,
     )
     db.add(prompt)
 
-    version = PromptVersion(
-        id=new_ulid(),
-        prompt_id=prompt_id,
-        version=1,
-        content=body.initial_content,
-        commit_message=body.initial_commit_message or "Initial version",
-    )
-    db.add(version)
+    versions: list[PromptVersion] = []
+    if body.initial_content:
+        version = PromptVersion(
+            id=new_ulid(),
+            prompt_id=prompt_id,
+            version=1,
+            content=body.initial_content,
+            commit_message=body.initial_commit_message or "Initial version",
+        )
+        db.add(version)
+        versions = [version]
+
     await db.commit()
     await db.refresh(prompt)
-    return _prompt_to_response(prompt, [version])
+    return _prompt_to_response(prompt, versions)
 
 
 async def get_prompt_by_name(name: str, db: DBSession) -> Optional[PromptResponse]:
-    result = await db.execute(select(Prompt).where(Prompt.name == name))
+    result = await db.execute(
+        select(Prompt).where((Prompt.name == name) | (Prompt.id == name))
+    )
     prompt = result.scalar_one_or_none()
     if not prompt:
         return None
@@ -80,9 +87,14 @@ async def get_prompt_by_name(name: str, db: DBSession) -> Optional[PromptRespons
 
 
 async def add_version(
-    name: str, body: PromptVersionCreate, db: DBSession
+    name_or_id: str, body: PromptVersionCreate, db: DBSession
 ) -> Optional[PromptVersionResponse]:
-    result = await db.execute(select(Prompt).where(Prompt.name == name))
+    # Accept lookup by either name or ID (ULID)
+    result = await db.execute(
+        select(Prompt).where(
+            (Prompt.name == name_or_id) | (Prompt.id == name_or_id)
+        )
+    )
     prompt = result.scalar_one_or_none()
     if not prompt:
         return None

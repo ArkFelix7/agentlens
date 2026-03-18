@@ -98,11 +98,11 @@ async def get_current_version_text(name: str, db: AsyncSession = Depends(get_db)
     return PlainTextResponse(content=version.content)
 
 
-@router.post("/prompts/{name}/versions", response_model=PromptVersionResponse, status_code=201)
+@router.post("/prompts/{name_or_id}/versions", response_model=PromptVersionResponse, status_code=201)
 async def add_prompt_version(
-    name: str, body: PromptVersionCreate, db: AsyncSession = Depends(get_db)
+    name_or_id: str, body: PromptVersionCreate, db: AsyncSession = Depends(get_db)
 ):
-    result = await add_version(name, body, db)
+    result = await add_version(name_or_id, body, db)
     if not result:
         raise HTTPException(status_code=404, detail="Prompt not found")
     return result

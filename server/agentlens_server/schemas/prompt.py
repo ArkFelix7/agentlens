@@ -27,7 +27,7 @@ class PromptVersionResponse(BaseModel):
 class PromptCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    initial_content: str
+    initial_content: Optional[str] = None
     initial_commit_message: Optional[str] = "Initial version"
 
 

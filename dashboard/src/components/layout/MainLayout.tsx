@@ -13,7 +13,8 @@ export function MainLayout() {
   const { alerts, addAlert, dismiss } = useBudgetAlerts();
 
   useEffect(() => {
-    return onBudgetAlert((alert) => addAlert(alert as BudgetAlertMessage));
+    const unsubscribe = onBudgetAlert((alert) => addAlert(alert as BudgetAlertMessage));
+    return () => void unsubscribe();
   }, [addAlert]);
 
   return (

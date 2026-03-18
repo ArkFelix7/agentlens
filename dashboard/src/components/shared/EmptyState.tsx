@@ -7,12 +7,15 @@ interface EmptyStateProps {
   title?: string;
   description?: string;
   showSetup?: boolean;
+  /** Custom icon to render instead of the default AgentLens logo. */
+  icon?: React.ReactNode;
 }
 
 export function EmptyState({
   title = 'Waiting for agent connection...',
   description = 'Start your agent with AgentLens instrumentation to see traces here.',
   showSetup = true,
+  icon,
 }: EmptyStateProps) {
   return (
     <motion.div
@@ -21,17 +24,19 @@ export function EmptyState({
       transition={{ duration: 0.3 }}
       className="flex flex-col items-center justify-center h-full p-8 text-center"
     >
-      {/* Logo */}
+      {/* Icon / Logo */}
       <div className="relative mb-6">
         <div className="w-16 h-16 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="8" stroke="#6366f1" strokeWidth="2" fill="none" />
-            <circle cx="16" cy="16" r="3" fill="#6366f1" />
-            <line x1="16" y1="4" x2="16" y2="10" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
-            <line x1="16" y1="22" x2="16" y2="28" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
-            <line x1="4" y1="16" x2="10" y2="16" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
-            <line x1="22" y1="16" x2="28" y2="16" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          {icon ?? (
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="8" stroke="#6366f1" strokeWidth="2" fill="none" />
+              <circle cx="16" cy="16" r="3" fill="#6366f1" />
+              <line x1="16" y1="4" x2="16" y2="10" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+              <line x1="16" y1="22" x2="16" y2="28" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+              <line x1="4" y1="16" x2="10" y2="16" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+              <line x1="22" y1="16" x2="28" y2="16" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
         </div>
         {/* Pulsing ring */}
         <div className="absolute inset-0 rounded-2xl border border-[var(--accent-indigo)] opacity-30 live-pulse" />

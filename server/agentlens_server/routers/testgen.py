@@ -30,6 +30,15 @@ async def get_test_file(session_id: str, db: AsyncSession = Depends(get_db)):
     return TestGenResponse(**result)
 
 
+@router.post("/testgen/{session_id}", response_model=TestGenResponse)
+async def post_test_file(session_id: str, db: AsyncSession = Depends(get_db)):
+    """Generate and return test file content as JSON (POST variant)."""
+    result = await generate_test_file(session_id, db)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return TestGenResponse(**result)
+
+
 @router.get("/testgen/{session_id}/download")
 async def download_test_file(session_id: str, db: AsyncSession = Depends(get_db)):
     """Download generated test file as a .py file."""
