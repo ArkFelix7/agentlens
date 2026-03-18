@@ -1,0 +1,38 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#30363d" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="640" fill="url(#grid)" />
+
+  <circle cx="900" cy="320" r="300" fill="#58a6ff" fill-opacity="0.1" />
+
+  <text x="80" y="100" font-family="Arial, sans-serif" font-size="24" fill="#8b949e" font-weight="500">ArkFelix7 /</text>
+  <text x="80" y="320" font-family="Arial, sans-serif" font-size="100" fill="#ffffff" font-weight="800">AgentLens</text>
+  
+  <text x="80" y="380" font-family="Arial, sans-serif" font-size="32" fill="#58a6ff" font-weight="400">The Observability Layer for AI Agents</text>
+
+  <g transform="translate(850, 220)">
+    <circle cx="0" cy="0" r="10" fill="#30363d" />
+    <circle cx="100" cy="80" r="10" fill="#30363d" />
+    <circle cx="100" cy="-80" r="10" fill="#30363d" />
+    <line x1="10" y1="5" x2="90" y2="75" stroke="#30363d" stroke-width="4" />
+    <line x1="10" y1="-5" x2="90" y2="-75" stroke="#30363d" stroke-width="4" />
+    
+    <circle cx="110" cy="90" r="80" fill="none" stroke="#58a6ff" stroke-width="6" />
+    <line x1="165" y1="145" x2="210" y2="190" stroke="#58a6ff" stroke-width="12" stroke-linecap="round" />
+    
+    <circle cx="100" cy="80" r="12" fill="#58a6ff">
+      <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+    </circle>
+  </g>
+
+  <rect x="80" y="520" width="200" height="40" rx="20" fill="#21262d" />
+  <text x="110" y="546" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9">Open Source</text>
+  
+  <rect x="300" y="520" width="220" height="40" rx="20" fill="#21262d" />
+  <text x="330" y="546" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9">Agent Debugging</text>
+</svg>

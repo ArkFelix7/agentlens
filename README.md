@@ -6,8 +6,7 @@
 
 **See every decision, trace every tool call, catch every hallucination.**
 
-<!-- Demo GIF goes here — record with OBS, convert to GIF with gifski, place at public/demo.gif -->
-<!-- ![AgentLens Demo](https://raw.githubusercontent.com/ArkFelix7/agentlens/main/dashboard/public/demo.gif) -->
+![AgentLens Demo](https://raw.githubusercontent.com/ArkFelix7/agentlens/main/demo.gif)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI SDK](https://img.shields.io/pypi/v/agentlens-sdk?label=agentlens-sdk&cacheSeconds=300)](https://pypi.org/project/agentlens-sdk/)

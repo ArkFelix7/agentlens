@@ -44,7 +44,7 @@ pip install -e ".[dev]"
 pytest tests/ -v
 
 # Run with auto-reload
-uvicorn src.main:app --port 8766 --reload
+uvicorn agentlens_server.main:app --port 8766 --reload
 ```
 
 ### Dashboard (React + Vite)
@@ -68,7 +68,7 @@ npm run build
 ```bash
 cd sdk-python
 pip install -e .
-python -c "from agentlens import init, trace; print('OK')"
+python -c "from agentlens_sdk import init, trace; print('OK')"
 ```
 
 ### TypeScript SDK
@@ -83,7 +83,7 @@ npm run build
 
 ```bash
 # Start server first
-cd server && uvicorn src.main:app --port 8766 &
+cd server && uvicorn agentlens_server.main:app --port 8766 &
 
 # Run all 38 integration tests
 python tests/integration/test_runner.py
@@ -94,9 +94,9 @@ python tests/integration/test_runner.py --bench
 
 ## Adding a New Interceptor
 
-1. Create `sdk-python/src/agentlens/interceptors/<framework>_interceptor.py`
+1. Create `sdk-python/src/agentlens_sdk/interceptors/<framework>_interceptor.py`
 2. Export an `instrument_<framework>()` function following the pattern in `crewai_interceptor.py`
-3. Add to `sdk-python/src/agentlens/interceptors/__init__.py`
+3. Add to `sdk-python/src/agentlens_sdk/interceptors/__init__.py`
 4. Add a smoke test in the CI workflow
 
 ## Code Style
@@ -116,7 +116,7 @@ python tests/integration/test_runner.py --bench
 
 ## Reporting Issues
 
-Open an issue at https://github.com/anthropics/claude-code/issues with:
+Open an issue at https://github.com/ArkFelix7/agentlens/issues with:
 - A clear description of the problem
 - Steps to reproduce
 - Expected vs actual behavior

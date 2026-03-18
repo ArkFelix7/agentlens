@@ -65,6 +65,21 @@ htmlcov/
 .env.test.local
 .env.production.local
 
+# Credentials — never commit
+.pypirc
+
+# Large media — never commit
+*.mov
+*.mp4
+
+# Internal-only docs — never push to public
+LAUNCH.md
+PUBLISH_GUIDE.md
+
+# Stale pre-rename server source (replaced by agentlens_server/)
+server/src/
+
+
 # Vite
 dashboard/dist/
 dashboard/.vite/
