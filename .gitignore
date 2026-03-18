@@ -75,6 +75,12 @@ htmlcov/
 # Internal-only docs — never push to public
 LAUNCH.md
 PUBLISH_GUIDE.md
+AGENTLENS_V2_PRD.md
+AGENTLENS_GROWTH_RESEARCH.md
+AgentLens_ProjectStatus.md
+
+# Claude Code project settings — internal tool config
+.claude/
 
 # Stale pre-rename server source (replaced by agentlens_server/)
 server/src/
