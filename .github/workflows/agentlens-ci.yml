@@ -1,0 +1,34 @@
+# AgentLens CI Example Workflow
+# Copy this file to your repo's .github/workflows/ directory.
+# It runs your agent on every PR and posts a reliability report as a comment.
+#
+# Setup:
+#   1. pip install agentlens-sdk in your agent's requirements
+#   2. Add auto_instrument() or @trace decorators to your agent code
+#   3. Set GITHUB_TOKEN as a repository secret (or use the default secrets.GITHUB_TOKEN)
+
+name: AgentLens Trace Check
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  agentlens-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt  # your agent's requirements
+
+      - name: Run AgentLens Check
+        uses: ArkFelix7/agentlens/.github/actions/agentlens-check@main
+        with:
+          script: examples/demo_multi_step.py   # path to your agent script
+          fail-on-hallucination: 'true'
+          max-cost-usd: '0.50'
+          github-token: ${{ secrets.GITHUB_TOKEN }}

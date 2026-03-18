@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { useTraceStore } from '@/stores/traceStore';
+import { useSessionStore } from '@/stores/sessionStore';
 import { useTraceGraph } from '@/hooks/useTraceGraph';
 import { TraceGraph } from '@/components/traces/TraceGraph';
 import { TraceTimeline } from '@/components/traces/TraceTimeline';
 import { TraceDetail } from '@/components/traces/TraceDetail';
+import { AgentTopology } from '@/components/multiagent/AgentTopology';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { EventType } from '@/types';
 import clsx from 'clsx';
@@ -14,8 +16,12 @@ const EVENT_TYPES: EventType[] = ['llm_call', 'tool_call', 'decision', 'memory_r
 
 export function TracesPage() {
   const { selectedEventId, selectEvent, filter, setFilter, getFilteredEvents, getSelectedEvent } = useTraceStore();
+  const { sessions, activeSessionId, setActiveSession } = useSessionStore();
   const [viewMode, setViewMode] = useState<'graph' | 'timeline'>('timeline');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check if any session has a parent (multi-agent topology present)
+  const hasTopology = sessions.some(s => s.parent_session_id);
 
   const filteredEvents = getFilteredEvents();
   const selectedEvent = getSelectedEvent();
@@ -94,6 +100,17 @@ export function TracesPage() {
           {filteredEvents.length} events
         </span>
       </div>
+
+      {/* Agent topology (shown only when multi-agent sessions detected) */}
+      {hasTopology && (
+        <div className="px-4 py-2 border-b border-[var(--border-subtle)]">
+          <AgentTopology
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSelectSession={(id) => setActiveSession(id)}
+          />
+        </div>
+      )}
 
       {/* Main area */}
       <div className="flex flex-1 min-h-0">

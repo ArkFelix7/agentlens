@@ -16,8 +16,8 @@ Example:
         ...
 """
 
-from agentlens_sdk.trace import init, trace, auto_instrument, get_current_tracer as get_tracer, Tracer, SpanContext
+from agentlens_sdk.trace import init, trace, auto_instrument, get_current_tracer as get_tracer, get_prompt, Tracer, SpanContext
 from agentlens_sdk.config import get_config
 
 __version__ = "0.1.0"
-__all__ = ["init", "trace", "auto_instrument", "get_tracer", "Tracer", "SpanContext", "get_config"]
+__all__ = ["init", "trace", "auto_instrument", "get_tracer", "get_prompt", "Tracer", "SpanContext", "get_config"]

@@ -32,6 +32,14 @@ test:
 	cd server && pytest
 	cd dashboard && npm test
 
+build-dashboard:
+	cd dashboard && npm run build
+	rm -rf server/agentlens_server/static
+	cp -r dashboard/dist server/agentlens_server/static
+
+build-extension:
+	cd vscode-extension && npm install && npm run compile
+
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name node_modules -exec rm -rf {} + 2>/dev/null || true

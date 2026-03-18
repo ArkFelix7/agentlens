@@ -1,6 +1,6 @@
 [project]
 name = "agentlens-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "MCP server for AgentLens — zero-code observability for MCP-native AI agents"
 readme = "README.md"
 license = { text = "MIT" }

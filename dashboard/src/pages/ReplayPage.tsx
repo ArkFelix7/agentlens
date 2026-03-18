@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { Link } from 'lucide-react';
+import { Link, FlaskConical } from 'lucide-react';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { TraceEvent } from '@/types';
@@ -23,6 +23,8 @@ export function ReplayPage() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [copyLabel, setCopyLabel] = useState('Copy link');
+  const [saveTestLabel, setSaveTestLabel] = useState('Save as Test');
+  const [generatedTest, setGeneratedTest] = useState<string | null>(null);
 
   // Auto-select session from URL param on mount
   useEffect(() => {
@@ -38,6 +40,22 @@ export function ReplayPage() {
       setSearchParams({ session: activeSessionId }, { replace: true });
     }
   }, [activeSessionId, setSearchParams]);
+
+  const saveAsTest = useCallback(async () => {
+    if (!activeSessionId) return;
+    setSaveTestLabel('Generating...');
+    try {
+      const resp = await fetch(`${apiUrl}/api/v1/testgen/${activeSessionId}`, { method: 'POST' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      setGeneratedTest(data.test_code ?? JSON.stringify(data, null, 2));
+      setSaveTestLabel('Saved!');
+    } catch {
+      setSaveTestLabel('Failed');
+    } finally {
+      setTimeout(() => setSaveTestLabel('Save as Test'), 3000);
+    }
+  }, [activeSessionId, apiUrl]);
 
   const copyShareLink = useCallback(() => {
     const url = new URL(window.location.href);
@@ -100,8 +118,15 @@ export function ReplayPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar: share link */}
-      <div className="flex items-center justify-end px-4 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
+      {/* Toolbar: save as test + share link */}
+      <div className="flex items-center justify-end gap-3 px-4 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
+        <button
+          onClick={saveAsTest}
+          className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--accent-indigo)] transition-colors"
+        >
+          <FlaskConical size={12} />
+          {saveTestLabel}
+        </button>
         <button
           onClick={copyShareLink}
           className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -110,6 +135,34 @@ export function ReplayPage() {
           {copyLabel}
         </button>
       </div>
+
+      {/* Generated test code modal */}
+      {generatedTest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
+              <span className="text-sm font-mono font-semibold text-[var(--text-primary)]">Generated Test</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigator.clipboard.writeText(generatedTest)}
+                  className="text-xs font-mono text-[var(--accent-indigo)] hover:opacity-80"
+                >
+                  Copy
+                </button>
+                <button
+                  onClick={() => setGeneratedTest(null)}
+                  className="text-xs font-mono text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <pre className="flex-1 overflow-auto p-4 text-xs font-mono text-[var(--text-secondary)] whitespace-pre-wrap">
+              {generatedTest}
+            </pre>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <div className="flex flex-1 min-h-0">

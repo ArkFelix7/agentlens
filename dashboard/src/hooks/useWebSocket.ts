@@ -7,6 +7,12 @@ import { useTraceStore } from '@/stores/traceStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { WSMessage, TraceEvent, Session } from '@/types';
 
+// Global budget alert event emitter (simple pub-sub for cross-component alerts)
+type BudgetAlertListener = (alert: unknown) => void;
+const _budgetListeners: Set<BudgetAlertListener> = new Set();
+export function onBudgetAlert(fn: BudgetAlertListener) { _budgetListeners.add(fn); return () => _budgetListeners.delete(fn); }
+function _emitBudgetAlert(alert: unknown) { _budgetListeners.forEach(fn => fn(alert)); }
+
 const RECONNECT_DELAY = 5000;
 
 export function useWebSocket() {
@@ -48,6 +54,10 @@ export function useWebSocket() {
         }
         case 'ping': {
           wsRef.current?.send(JSON.stringify({ type: 'pong' }));
+          break;
+        }
+        case 'budget_alert': {
+          _emitBudgetAlert(msg.data);
           break;
         }
         default:

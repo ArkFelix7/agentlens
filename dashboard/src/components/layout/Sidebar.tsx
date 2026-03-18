@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Activity, DollarSign, AlertTriangle, Brain, Play, Settings } from 'lucide-react';
+import { Activity, DollarSign, AlertTriangle, Brain, Play, Settings, Shield, Wallet, FileText, GitCompare } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import clsx from 'clsx';
 import { Tooltip } from '@/components/shared/Tooltip';
@@ -13,6 +13,10 @@ const navItems = [
   { icon: AlertTriangle, label: 'Hallucinations', path: '/hallucinations', shortcut: '3' },
   { icon: Brain, label: 'Memory', path: '/memory', shortcut: '4' },
   { icon: Play, label: 'Replay', path: '/replay', shortcut: '5' },
+  { icon: Shield, label: 'Score', path: '/score', shortcut: '6' },
+  { icon: Wallet, label: 'Budget', path: '/budget', shortcut: '7' },
+  { icon: FileText, label: 'Prompts', path: '/prompts', shortcut: '8' },
+  { icon: GitCompare, label: 'Compare', path: '/compare', shortcut: '9' },
 ];
 
 export function Sidebar() {
@@ -24,6 +28,10 @@ export function Sidebar() {
   useHotkeys('3', () => navigate('/hallucinations'));
   useHotkeys('4', () => navigate('/memory'));
   useHotkeys('5', () => navigate('/replay'));
+  useHotkeys('6', () => navigate('/score'));
+  useHotkeys('7', () => navigate('/budget'));
+  useHotkeys('8', () => navigate('/prompts'));
+  useHotkeys('9', () => navigate('/compare'));
   useHotkeys(',', () => navigate('/settings'));
 
   return (

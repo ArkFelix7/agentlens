@@ -19,7 +19,7 @@ from agentlens_server.config import settings
 from agentlens_server.database import create_all_tables
 from agentlens_server.websocket.manager import manager
 from agentlens_server.websocket.handlers import handle_dashboard_client
-from agentlens_server.routers import traces, sessions, costs, hallucinations, memory
+from agentlens_server.routers import traces, sessions, costs, hallucinations, memory, privacy, score, budget, testgen, prompts, compare
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,6 +61,23 @@ app.include_router(sessions.router, prefix="/api/v1")
 app.include_router(costs.router, prefix="/api/v1")
 app.include_router(hallucinations.router, prefix="/api/v1")
 app.include_router(memory.router, prefix="/api/v1")
+app.include_router(privacy.router, prefix="/api/v1")
+app.include_router(score.router, prefix="/api/v1")
+app.include_router(budget.router, prefix="/api/v1")
+app.include_router(testgen.router, prefix="/api/v1")
+app.include_router(prompts.router, prefix="/api/v1")
+app.include_router(compare.router, prefix="/api/v1")
+
+
+# Serve compiled dashboard (present when installed via pip)
+import os as _os
+from pathlib import Path as _Path
+from fastapi.staticfiles import StaticFiles
+
+_static_dir = _Path(__file__).parent / "static"
+if _static_dir.exists() and _static_dir.is_dir():
+    # Mount SPA catch-all LAST so API routes take precedence
+    app.mount("/app", StaticFiles(directory=str(_static_dir), html=True), name="static")
 
 
 @app.get("/")
@@ -202,7 +219,12 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
                     sid = data.get("session_id")
                     aname = data.get("agent_name", "agent")
                     if sid:
-                        session_resp = await create_or_update_session(db, sid, aname)
+                        session_resp = await create_or_update_session(
+                            db, sid, aname,
+                            agent_id=data.get("agent_id"),
+                            agent_role=data.get("agent_role"),
+                            parent_session_id=data.get("parent_session_id"),
+                        )
                         # Use mode='json' to get datetime as ISO strings (json.dumps-safe)
                         data = session_resp.model_dump(mode="json")
                     await manager.broadcast_to_dashboards({"type": "session_start", "data": data})
@@ -225,11 +247,29 @@ async def _handle_sdk_after_accept(ws: WebSocket) -> None:
 
 
 def run() -> None:
-    """CLI entrypoint: agentlens-server"""
-    uvicorn.run(
-        "agentlens_server.main:app",
-        host="0.0.0.0",
-        port=8766,
-        reload=False,
-        log_level="info",
-    )
+    """Entry point for `agentlens-server` CLI — starts server only."""
+    uvicorn.run("agentlens_server.main:app", host="0.0.0.0", port=8766, reload=False)
+
+
+def start() -> None:
+    """Entry point for `agentlens` CLI — starts server and opens browser."""
+    import threading
+    import webbrowser
+    import time
+
+    def _open_browser() -> None:
+        time.sleep(2.0)
+        webbrowser.open("http://localhost:8766")
+
+    threading.Thread(target=_open_browser, daemon=True).start()
+
+    print("")
+    print("  AgentLens v0.2.0 starting...")
+    print("  Dashboard: http://localhost:8766")
+    print("  API:       http://localhost:8766/api/v1")
+    print("")
+    print("  Instrument your agent:")
+    print("    from agentlens_sdk import auto_instrument")
+    print("    auto_instrument()")
+    print("")
+    uvicorn.run("agentlens_server.main:app", host="0.0.0.0", port=8766, reload=False)

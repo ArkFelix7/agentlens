@@ -41,6 +41,9 @@ export interface Session {
   total_tokens_output: number;
   status: SessionStatus;
   metadata: Record<string, unknown> | null;
+  agent_id?: string | null;
+  agent_role?: string | null;
+  parent_session_id?: string | null;
 }
 
 export interface SessionSummary {
@@ -121,6 +124,61 @@ export interface MemoryEntry {
   metadata: Record<string, unknown> | null;
 }
 
+// ===== SCORE TYPES =====
+
+export interface ScoreResult {
+  session_id: string;
+  score: number;
+  grade: 'A' | 'B' | 'C' | 'D';
+  color: string;
+  hallucination_count: number;
+  error_count: number;
+  mean_step_ms: number;
+  cost_usd: number;
+  penalty_breakdown: Record<string, number>;
+}
+
+// ===== BUDGET TYPES =====
+
+export interface BudgetRule {
+  id: string;
+  rule_name: string;
+  rule_type: 'cost_per_session' | 'cost_per_step' | 'loop_detection';
+  threshold_usd: number | null;
+  loop_max_calls: number | null;
+  loop_window_seconds: number | null;
+  webhook_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface BudgetAlert {
+  session_id: string;
+  rule_id: string;
+  rule_name: string;
+  rule_type: string;
+  triggered_at: string;
+  details: string;
+}
+
+export interface BudgetAlertMessage {
+  type: 'budget_alert';
+  data: BudgetAlert;
+}
+
+// ===== MULTI-AGENT TYPES =====
+
+export interface AgentNode {
+  id: string;
+  agent_name: string;
+  agent_id: string | null;
+  agent_role: string | null;
+  status: SessionStatus;
+  total_cost_usd: number;
+  total_events: number;
+  children: AgentNode[];
+}
+
 // ===== WEBSOCKET TYPES =====
 
 export type WSMessageType =
@@ -135,6 +193,8 @@ export type WSMessageType =
   | 'sessions_list'
   | 'session_events'
   | 'session_cleared'
+  | 'budget_alert'
+  | 'score_update'
   | 'ping'
   | 'pong';
 

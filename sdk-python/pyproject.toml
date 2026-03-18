@@ -1,6 +1,6 @@
 [project]
 name = "agentlens-sdk"
-version = "0.1.0"
+version = "0.2.0"
 description = "Python SDK for AgentLens — observability for AI agents"
 readme = "README.md"
 license = { text = "MIT" }

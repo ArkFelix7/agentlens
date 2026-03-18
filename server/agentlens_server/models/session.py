@@ -1,7 +1,7 @@
 """ORM model for agent sessions."""
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Float, DateTime, Text
+from sqlalchemy import Column, String, Integer, Float, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
 from agentlens_server.database import Base
@@ -21,7 +21,14 @@ class Session(Base):
     status = Column(String, nullable=False, default="active")  # active, completed, error
     metadata_ = Column("metadata", Text, nullable=True)
 
+    # F9: Multi-agent coordination fields
+    agent_id = Column(String, nullable=True)
+    agent_role = Column(String, nullable=True)        # "orchestrator", "worker", "researcher", etc.
+    parent_agent_id = Column(String, nullable=True)   # agent_id of the spawning agent
+    parent_session_id = Column(String, ForeignKey("sessions.id"), nullable=True)
+
     # Relationships
     trace_events = relationship("TraceEvent", back_populates="session", cascade="all, delete-orphan")
     memory_entries = relationship("MemoryEntry", back_populates="session", cascade="all, delete-orphan")
     hallucination_alerts = relationship("HallucinationAlert", back_populates="session", cascade="all, delete-orphan")
+    child_sessions = relationship("Session", foreign_keys="Session.parent_session_id", backref=None)

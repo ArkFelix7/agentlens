@@ -11,6 +11,10 @@ import { HallucinationsPage } from '@/pages/HallucinationsPage';
 import { MemoryPage } from '@/pages/MemoryPage';
 import { ReplayPage } from '@/pages/ReplayPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { ScorePage } from '@/pages/ScorePage';
+import { BudgetPage } from '@/pages/BudgetPage';
+import { PromptsPage } from '@/pages/PromptsPage';
+import { ComparePage } from '@/pages/ComparePage';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { WebSocketContext } from '@/contexts/WebSocketContext';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -45,6 +49,10 @@ function AppInner() {
         <Route path="memory" element={<MemoryPage />} />
         <Route path="replay" element={<ReplayPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="score" element={<ScorePage />} />
+        <Route path="budget" element={<BudgetPage />} />
+        <Route path="prompts" element={<PromptsPage />} />
+        <Route path="compare" element={<ComparePage />} />
       </Route>
     </Routes>
     </WebSocketContext.Provider>

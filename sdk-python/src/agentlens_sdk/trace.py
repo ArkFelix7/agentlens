@@ -13,7 +13,24 @@ from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
-from ulid import ULID
+import uuid as _uuid
+
+
+def _new_ulid() -> str:
+    """Generate a new ULID string, compatible with both python-ulid and ulid-py packages."""
+    try:
+        import ulid as _ulid
+        obj = _ulid.ULID()
+        return str(obj)
+    except (TypeError, AttributeError):
+        try:
+            import ulid as _ulid
+            return str(_ulid.new())
+        except Exception:
+            pass
+    except Exception:
+        pass
+    return _uuid.uuid4().hex[:26].upper()
 
 from agentlens_sdk.client import AgentLensClient
 from agentlens_sdk.config import get_config, set_config, SDKConfig, SENSITIVE_KEYS
@@ -62,8 +79,21 @@ def init(
     http_url: str | None = None,
     agent_name: str | None = None,
     session_id: str | None = None,
+    agent_id: str | None = None,
+    agent_role: str | None = None,
+    parent_session_id: str | None = None,
 ) -> None:
-    """Initialize the AgentLens SDK. Call once before using @trace or auto_instrument."""
+    """Initialize the AgentLens SDK. Call once before using @trace or auto_instrument.
+
+    Args:
+        server_url: WebSocket URL of the AgentLens server.
+        http_url: HTTP URL of the AgentLens server (fallback).
+        agent_name: Human-readable agent name shown in the dashboard.
+        session_id: Override the auto-generated ULID session ID.
+        agent_id: Unique agent identifier for multi-agent topology (F9).
+        agent_role: Role label for this agent in the topology (e.g. "planner").
+        parent_session_id: Session ID of the parent agent for topology edges (F9).
+    """
     global _global_client, _global_session_id
 
     config = SDKConfig(
@@ -77,9 +107,12 @@ def init(
         server_url=config.server_url,
         http_url=config.http_url,
     )
-    _global_session_id = session_id or str(ULID())
+    _global_session_id = session_id or _new_ulid()
     _global_client._session_id = _global_session_id
     _global_client._agent_name = agent_name or "agent"
+    _global_client._agent_id = agent_id
+    _global_client._agent_role = agent_role
+    _global_client._parent_session_id = parent_session_id
 
     # Connect asynchronously (non-blocking)
     try:
@@ -118,7 +151,7 @@ class SpanContext:
         parent_event_id: Optional[str] = None,
         client: Optional[AgentLensClient] = None,
     ):
-        self.id = str(ULID())
+        self.id = _new_ulid()
         self.event_type = event_type
         self.event_name = event_name
         self.session_id = session_id
@@ -258,6 +291,8 @@ def trace(
     *,
     name: str | None = None,
     event_type: str = "decision",
+    prompt_name: str | None = None,
+    prompt_version: str | None = None,
 ):
     """Decorator that traces a function execution as a trace event.
 
@@ -265,16 +300,21 @@ def trace(
         @trace
         async def my_func(): ...
 
-        @trace(name="custom_name", event_type="llm_call")
+        @trace(name="custom_name", event_type="llm_call", prompt_name="my_prompt", prompt_version="v2")
         async def my_func(): ...
     """
     def decorator(fn: Callable) -> Callable:
         event_name = name or fn.__name__
+        _prompt_meta: dict = {}
+        if prompt_name:
+            _prompt_meta["prompt_name"] = prompt_name
+        if prompt_version:
+            _prompt_meta["prompt_version"] = prompt_version
 
         @functools.wraps(fn)
         async def async_wrapper(*args, **kwargs):
             client = get_client()
-            session_id = get_session_id() or str(ULID())
+            session_id = get_session_id() or _new_ulid()
             if client and not client._session_id:
                 client._session_id = session_id
 
@@ -284,6 +324,8 @@ def trace(
                 session_id=session_id,
                 client=client,
             )
+            if _prompt_meta:
+                span._metadata = {**(_prompt_meta)}
             try:
                 result = await fn(*args, **kwargs)
                 span.set_output(result if not isinstance(result, (bytes, type(None))) else str(result))
@@ -297,7 +339,7 @@ def trace(
         @functools.wraps(fn)
         def sync_wrapper(*args, **kwargs):
             client = get_client()
-            session_id = get_session_id() or str(ULID())
+            session_id = get_session_id() or _new_ulid()
             if client and not client._session_id:
                 client._session_id = session_id
 
@@ -307,6 +349,8 @@ def trace(
                 session_id=session_id,
                 client=client,
             )
+            if _prompt_meta:
+                span._metadata = {**(_prompt_meta)}
             try:
                 result = fn(*args, **kwargs)
                 span.set_output(result if not isinstance(result, (bytes, type(None))) else str(result))
@@ -324,6 +368,34 @@ def trace(
     if func is not None:
         return decorator(func)
     return decorator
+
+
+def get_prompt(name: str, version: Optional[int] = None) -> str:
+    """Fetch a prompt from the AgentLens server prompt registry (F10).
+
+    Returns the prompt text, or an empty string if unavailable.
+    Never raises — fails silently so agent code is not disrupted.
+
+    Args:
+        name: Prompt name (e.g. "system_prompt").
+        version: Specific version number. If None, fetches the current/promoted version.
+    """
+    try:
+        config = get_config()
+        import urllib.request
+        base = config.http_url.rstrip("/")
+        if version is not None:
+            url = f"{base}/api/v1/prompts/{name}/versions/{version}"
+            with urllib.request.urlopen(url, timeout=2) as resp:
+                import json as _json
+                data = _json.loads(resp.read())
+                return data.get("content", "")
+        else:
+            url = f"{base}/api/v1/prompts/{name}/current"
+            with urllib.request.urlopen(url, timeout=2) as resp:
+                return resp.read().decode("utf-8")
+    except Exception:
+        return ""
 
 
 def auto_instrument() -> None:

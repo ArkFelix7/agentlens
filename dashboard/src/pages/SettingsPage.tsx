@@ -116,6 +116,37 @@ export function SettingsPage() {
         </table>
       </div>
 
+      {/* Privacy & Data */}
+      <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg p-4 space-y-3">
+        <h2 className="text-sm font-mono font-medium text-[var(--text-primary)]">Privacy &amp; Data</h2>
+        <div className="text-xs font-mono text-[var(--text-secondary)]">
+          Storage: Local SQLite database · No cloud sync · No telemetry
+        </div>
+        <button
+          onClick={() => {
+            fetch('/api/v1/privacy/certificate')
+              .then((res) => res.json())
+              .then((data) => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                a.href = url;
+                a.download = `agentlens-data-residency-${date}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              })
+              .catch(() => {});
+          }}
+          className="px-3 py-1.5 text-xs font-mono rounded border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--border-default)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          Download Data Residency Certificate
+        </button>
+        <p className="text-xs text-[var(--text-tertiary)]">
+          All trace data is stored in a local SQLite database on this machine. No data is ever transmitted to external servers.
+        </p>
+      </div>
+
       {/* About */}
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg p-4 space-y-2">
         <h2 className="text-sm font-mono font-medium text-[var(--text-primary)]">About</h2>

@@ -30,6 +30,9 @@ class AgentLensClient:
         self._connected = False
         self._session_id: Optional[str] = None
         self._agent_name: Optional[str] = None
+        self._agent_id: Optional[str] = None
+        self._agent_role: Optional[str] = None
+        self._parent_session_id: Optional[str] = None
         self._flush_task: Optional[asyncio.Task] = None
 
     async def connect(self) -> None:
@@ -44,14 +47,21 @@ class AgentLensClient:
             self._connected = True
             # Identify as SDK client
             await self._ws.send(json.dumps({"type": "hello", "role": "sdk"}))
-            # Announce session with agent_name so server can create it properly
+            # Announce session with agent metadata so server can create/update it
             if self._session_id:
+                session_data: dict = {
+                    "session_id": self._session_id,
+                    "agent_name": self._agent_name or "agent",
+                }
+                if self._agent_id:
+                    session_data["agent_id"] = self._agent_id
+                if self._agent_role:
+                    session_data["agent_role"] = self._agent_role
+                if self._parent_session_id:
+                    session_data["parent_session_id"] = self._parent_session_id
                 await self._ws.send(json.dumps({
                     "type": "session_start",
-                    "data": {
-                        "session_id": self._session_id,
-                        "agent_name": self._agent_name or "agent",
-                    },
+                    "data": session_data,
                 }))
             self._flush_task = asyncio.create_task(self._flush_loop())
             logger.info(f"AgentLens SDK connected to {self.ws_url}")

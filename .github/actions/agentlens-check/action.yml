@@ -1,0 +1,88 @@
+name: 'AgentLens Trace Check'
+description: 'Run agent traces and post a quality report as a PR comment'
+author: 'AgentLens'
+branding:
+  icon: 'eye'
+  color: 'purple'
+
+inputs:
+  script:
+    description: 'Python script to run your agent (must use agentlens-sdk)'
+    required: true
+  server-version:
+    description: 'agentlens-server version to install (default: latest)'
+    required: false
+    default: 'latest'
+  fail-on-hallucination:
+    description: 'Fail the CI check if any hallucinations are detected'
+    required: false
+    default: 'true'
+  max-cost-usd:
+    description: 'Fail if session cost exceeds this USD value'
+    required: false
+    default: '1.00'
+  github-token:
+    description: 'GitHub token for posting PR comment'
+    required: false
+    default: ''
+
+outputs:
+  score:
+    description: 'AgentLens reliability score (0-100)'
+    value: ${{ steps.collect.outputs.score }}
+  hallucination-count:
+    description: 'Number of hallucinations detected'
+    value: ${{ steps.collect.outputs.hallucination-count }}
+  total-cost-usd:
+    description: 'Total session cost in USD'
+    value: ${{ steps.collect.outputs.total-cost-usd }}
+  session-id:
+    description: 'Session ID for trace replay'
+    value: ${{ steps.collect.outputs.session-id }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install AgentLens
+      shell: bash
+      run: |
+        if [ "${{ inputs.server-version }}" = "latest" ]; then
+          pip install agentlens-server agentlens-sdk httpx
+        else
+          pip install "agentlens-server==${{ inputs.server-version }}" agentlens-sdk httpx
+        fi
+
+    - name: Start AgentLens Server
+      shell: bash
+      run: agentlens-server &
+
+    - name: Wait for server to be ready
+      shell: bash
+      run: |
+        echo "Waiting for AgentLens server..."
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8766/health > /dev/null 2>&1; then
+            echo "Server is ready"
+            break
+          fi
+          sleep 1
+        done
+
+    - name: Run agent script
+      shell: bash
+      run: python "${{ inputs.script }}"
+
+    - name: Collect results and post PR comment
+      shell: bash
+      id: collect
+      run: python "${{ github.action_path }}/src/main.py"
+      env:
+        AGENTLENS_SERVER: http://localhost:8766
+        FAIL_ON_HALLUCINATION: ${{ inputs.fail-on-hallucination }}
+        MAX_COST_USD: ${{ inputs.max-cost-usd }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_SHA: ${{ github.sha }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_OUTPUT: ${{ env.GITHUB_OUTPUT }}

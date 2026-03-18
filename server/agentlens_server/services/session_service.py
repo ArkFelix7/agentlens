@@ -40,8 +40,11 @@ async def create_or_update_session(
     db: AsyncSession,
     session_id: str,
     agent_name: str,
+    agent_id: Optional[str] = None,
+    agent_role: Optional[str] = None,
+    parent_session_id: Optional[str] = None,
 ) -> SessionResponse:
-    """Create a session with the given agent_name, or update agent_name if already exists."""
+    """Create a session with the given metadata, or update if already exists."""
     result = await db.execute(select(Session).where(Session.id == session_id))
     session = result.scalar_one_or_none()
     if session is None:
@@ -50,10 +53,20 @@ async def create_or_update_session(
             agent_name=agent_name,
             status="active",
             started_at=datetime.now(timezone.utc),
+            agent_id=agent_id,
+            agent_role=agent_role,
+            parent_session_id=parent_session_id,
         )
         db.add(session)
-    elif session.agent_name in ("unnamed", "agent", None):
-        session.agent_name = agent_name
+    else:
+        if session.agent_name in ("unnamed", "agent", None):
+            session.agent_name = agent_name
+        if agent_id and not session.agent_id:
+            session.agent_id = agent_id
+        if agent_role and not session.agent_role:
+            session.agent_role = agent_role
+        if parent_session_id and not session.parent_session_id:
+            session.parent_session_id = parent_session_id
     await db.commit()
     await db.refresh(session)
     return _orm_to_response(session)

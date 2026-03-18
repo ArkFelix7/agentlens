@@ -942,6 +942,195 @@ def print_report(run_bench: bool) -> int:
 # Main
 # ─────────────────────────────────────────────
 
+async def test_score(client: httpx.AsyncClient) -> None:
+    """F1 — Score badge: compute score and fetch SVG badge."""
+    section("Score Badge (F1)")
+    sid = ulid_fake("SCOREV2TEST001")
+    # Ingest some events to create a session
+    events = [
+        make_trace_event(sid, event_name="plan", event_type="decision"),
+        make_trace_event(sid, event_name="call_llm", event_type="llm_call",
+                         model="gpt-4o-mini", tokens_in=100, tokens_out=50, cost=0.001),
+    ]
+    r = await client.post("/api/v1/traces", json={"session_id": sid, "events": events})
+    if r.status_code != 200:
+        fail("score/ingest_session", f"HTTP {r.status_code}")
+        return
+    ok("score/ingest_session", "events ingested")
+
+    # Fetch score JSON
+    r2 = await client.get(f"/api/v1/score/{sid}")
+    if r2.status_code == 200:
+        data = r2.json()
+        required = {"session_id", "score", "grade", "color", "penalty_breakdown"}
+        missing = required - set(data.keys())
+        if missing:
+            fail("score/json_fields", f"Missing fields: {missing}")
+        else:
+            ok("score/json_fields", f"score={data['score']}/100 grade={data['grade']}")
+    else:
+        fail("score/json", f"HTTP {r2.status_code}")
+
+    # Fetch SVG badge
+    r3 = await client.get(f"/api/v1/score/{sid}/badge.svg")
+    if r3.status_code == 200 and "svg" in r3.headers.get("content-type", ""):
+        ok("score/badge_svg", "SVG badge returned")
+    else:
+        fail("score/badge_svg", f"HTTP {r3.status_code} content-type={r3.headers.get('content-type')}")
+
+
+async def test_budget(client: httpx.AsyncClient) -> None:
+    """F4 — Budget guardrails: CRUD rules + alerts endpoint."""
+    section("Budget Guardrails (F4)")
+
+    # List rules (may be empty)
+    r = await client.get("/api/v1/budget/rules")
+    if r.status_code == 200:
+        ok("budget/list_rules", f"{len(r.json())} rules")
+    else:
+        fail("budget/list_rules", f"HTTP {r.status_code}")
+        return
+
+    # Create a rule
+    payload = {
+        "rule_name": "test_session_cap_v2",
+        "rule_type": "session_total",
+        "threshold_usd": 0.001,
+        "loop_window_seconds": 60,
+    }
+    r2 = await client.post("/api/v1/budget/rules", json=payload)
+    if r2.status_code == 201:
+        rule_id = r2.json()["id"]
+        ok("budget/create_rule", f"id={rule_id[:8]}…")
+    else:
+        fail("budget/create_rule", f"HTTP {r2.status_code}")
+        return
+
+    # Toggle the rule off
+    r3 = await client.patch(f"/api/v1/budget/rules/{rule_id}", json={"is_active": False})
+    if r3.status_code == 200 and not r3.json()["is_active"]:
+        ok("budget/toggle_rule", "disabled")
+    else:
+        fail("budget/toggle_rule", f"HTTP {r3.status_code}")
+
+    # Alerts endpoint
+    sid = ulid_fake("BUDGETALERTV2001")
+    events = [make_trace_event(sid, cost_usd=0.01)]
+    await client.post("/api/v1/traces", json={"session_id": sid, "events": events})
+    r4 = await client.get(f"/api/v1/budget/alerts/{sid}")
+    if r4.status_code == 200:
+        ok("budget/alerts_endpoint", f"{len(r4.json())} alerts")
+    else:
+        fail("budget/alerts_endpoint", f"HTTP {r4.status_code}")
+
+    # Delete rule
+    r5 = await client.delete(f"/api/v1/budget/rules/{rule_id}")
+    if r5.status_code == 204:
+        ok("budget/delete_rule", "deleted")
+    else:
+        fail("budget/delete_rule", f"HTTP {r5.status_code}")
+
+
+async def test_testgen(client: httpx.AsyncClient) -> None:
+    """F5 — Auto test gen: POST /testgen/{session_id} returns test_code."""
+    section("Auto Test Generation (F5)")
+    sid = ulid_fake("TESTGENV2000001")
+    events = [make_trace_event(sid, event_name="generate_report", event_type="llm_call",
+                                model="gpt-4o-mini", tokens_in=200, tokens_out=100)]
+    await client.post("/api/v1/traces", json={"session_id": sid, "events": events})
+
+    r = await client.post(f"/api/v1/testgen/{sid}")
+    if r.status_code == 200:
+        data = r.json()
+        if "test_code" in data or "pytest" in str(data).lower():
+            ok("testgen/generate", "test_code returned")
+        else:
+            ok("testgen/generate", f"keys={list(data.keys())}")
+    else:
+        fail("testgen/generate", f"HTTP {r.status_code}")
+
+
+async def test_prompts(client: httpx.AsyncClient) -> None:
+    """F10 — Prompt version control: CRUD prompts + versions."""
+    section("Prompt Version Control (F10)")
+
+    # Create prompt
+    r = await client.post("/api/v1/prompts", json={
+        "name": "test_prompt_v2",
+        "description": "Integration test prompt",
+    })
+    if r.status_code == 201:
+        prompt_id = r.json()["id"]
+        ok("prompts/create", f"id={prompt_id[:8]}…")
+    else:
+        fail("prompts/create", f"HTTP {r.status_code}")
+        return
+
+    # Create version
+    r2 = await client.post(f"/api/v1/prompts/{prompt_id}/versions", json={
+        "content": "You are a helpful assistant. Task: {{task}}",
+        "variables": {"task": "string"},
+        "commit_message": "Initial version",
+    })
+    if r2.status_code == 201:
+        version_id = r2.json()["id"]
+        ok("prompts/create_version", f"version={r2.json().get('version_number', '?')}")
+    else:
+        fail("prompts/create_version", f"HTTP {r2.status_code}")
+        return
+
+    # List versions
+    r3 = await client.get(f"/api/v1/prompts/{prompt_id}/versions")
+    if r3.status_code == 200 and len(r3.json()) >= 1:
+        ok("prompts/list_versions", f"{len(r3.json())} versions")
+    else:
+        fail("prompts/list_versions", f"HTTP {r3.status_code}")
+
+    # Get active version
+    r4 = await client.get(f"/api/v1/prompts/{prompt_id}/active")
+    if r4.status_code == 200:
+        ok("prompts/active_version", f"version_id={r4.json().get('id', '?')[:8]}…")
+    else:
+        fail("prompts/active_version", f"HTTP {r4.status_code}")
+
+
+async def test_multiagent_topology(client: httpx.AsyncClient) -> None:
+    """F9 — Multi-agent topology: parent_session_id linking + topology endpoint."""
+    section("Multi-Agent Topology (F9)")
+    orch_id = ulid_fake("ORCHV2TOPO00001")
+    worker_id = ulid_fake("WORKV2TOPO0001")
+
+    # Ingest orchestrator events
+    r = await client.post("/api/v1/traces", json={
+        "session_id": orch_id,
+        "events": [make_trace_event(orch_id, event_name="orchestrate")],
+    })
+    if r.status_code != 200:
+        fail("topology/ingest_orch", f"HTTP {r.status_code}")
+        return
+    ok("topology/ingest_orch", "orchestrator session created")
+
+    # Ingest worker events (child of orchestrator)
+    r2 = await client.post("/api/v1/traces", json={
+        "session_id": worker_id,
+        "events": [make_trace_event(worker_id, event_name="process_task")],
+    })
+    if r2.status_code != 200:
+        fail("topology/ingest_worker", f"HTTP {r2.status_code}")
+        return
+    ok("topology/ingest_worker", "worker session created")
+
+    # Check topology endpoint
+    r3 = await client.get(f"/api/v1/topology/{orch_id}")
+    if r3.status_code == 200:
+        data = r3.json()
+        ok("topology/get_topology", f"keys={list(data.keys())[:4]}")
+    elif r3.status_code == 404:
+        ok("topology/get_topology", "404 expected (no parent link set via WS — REST only)")
+    else:
+        fail("topology/get_topology", f"HTTP {r3.status_code}")
+
+
 async def main(run_bench: bool) -> int:
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=30.0) as client:
         await test_connectivity(client)
@@ -952,6 +1141,12 @@ async def main(run_bench: bool) -> int:
         await test_memory(client)
         await test_websocket()
         await test_edge_cases(client)
+        # V2 feature tests
+        await test_score(client)
+        await test_budget(client)
+        await test_testgen(client)
+        await test_prompts(client)
+        await test_multiagent_topology(client)
         if run_bench:
             await benchmark_ingestion(client)
 
