@@ -9,6 +9,9 @@ export interface SDKConfig {
   sessionId: string;
   flushInterval: number;
   maxBufferSize: number;
+  agentId?: string;
+  agentRole?: string;
+  parentSessionId?: string;
 }
 
 const SENSITIVE_KEYS = new Set(['api_key', 'token', 'password', 'secret', 'authorization', 'auth', 'bearer']);
@@ -23,6 +26,9 @@ export function setConfig(options: InitOptions & { sessionId: string }): SDKConf
     sessionId: options.sessionId,
     flushInterval: 1000,
     maxBufferSize: 20,
+    agentId: options.agentId,
+    agentRole: options.agentRole,
+    parentSessionId: options.parentSessionId,
   };
   return globalConfig;
 }

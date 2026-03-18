@@ -106,6 +106,12 @@ export function trace<T extends (...args: unknown[]) => unknown>(
   const eventName = options.name || fn.name || 'anonymous';
   const eventType: EventType = options.eventType || 'decision';
 
+  // Build prompt metadata if provided (F10)
+  const promptMeta: Record<string, unknown> = {};
+  if (options.promptName) promptMeta['prompt_name'] = options.promptName;
+  if (options.promptVersion) promptMeta['prompt_version'] = options.promptVersion;
+  const hasPromptMeta = Object.keys(promptMeta).length > 0;
+
   // Detect if the original function is async
   const isAsync = fn.constructor?.name === 'AsyncFunction' ||
     (typeof fn === 'function' && fn.toString().startsWith('async '));
@@ -115,6 +121,7 @@ export function trace<T extends (...args: unknown[]) => unknown>(
       const client = globalClient;
       const sessionId = globalSessionId || ulid();
       const span = new SpanContext(eventType, eventName, sessionId, client);
+      if (hasPromptMeta) span.setAttribute('_prompt', promptMeta);
       try {
         const result = await (fn as (...a: unknown[]) => Promise<unknown>)(...args);
         if (result !== null && result !== undefined && typeof result !== 'object') {
@@ -137,6 +144,7 @@ export function trace<T extends (...args: unknown[]) => unknown>(
     const client = globalClient;
     const sessionId = globalSessionId || ulid();
     const span = new SpanContext(eventType, eventName, sessionId, client);
+    if (hasPromptMeta) span.setAttribute('_prompt', promptMeta);
     try {
       const result = (fn as (...a: unknown[]) => unknown)(...args);
       if (result !== null && result !== undefined && typeof result !== 'object') {

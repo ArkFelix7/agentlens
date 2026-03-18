@@ -29,8 +29,14 @@ export class AgentLensClient {
         this.ws!.once('open', () => {
           clearTimeout(timeout);
           this.connected = true;
-          // Identify as SDK client
-          this.ws!.send(JSON.stringify({ type: 'hello', role: 'sdk' }));
+          // Identify as SDK client with optional topology metadata
+          this.ws!.send(JSON.stringify({
+            type: 'hello',
+            role: 'sdk',
+            agent_id: this.config.agentId,
+            agent_role: this.config.agentRole,
+            parent_session_id: this.config.parentSessionId,
+          }));
           resolve();
         });
         this.ws!.once('error', (err) => {

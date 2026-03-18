@@ -27,9 +27,19 @@ export interface InitOptions {
   httpUrl?: string;
   agentName?: string;
   sessionId?: string;
+  /** Unique agent identifier for multi-agent topology (F9). */
+  agentId?: string;
+  /** Role label for this agent in the topology (e.g. "planner", "executor"). */
+  agentRole?: string;
+  /** Session ID of the parent agent — creates a topology edge in the dashboard (F9). */
+  parentSessionId?: string;
 }
 
 export interface TraceOptions {
   name?: string;
   eventType?: EventType;
+  /** Prompt name to associate this trace event with (F10). */
+  promptName?: string;
+  /** Prompt version to associate this trace event with (F10). */
+  promptVersion?: string;
 }
