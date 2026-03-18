@@ -7,7 +7,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from ulid import ULID
+from agentlens_server.utils import new_ulid
 
 from agentlens_server.models.trace_event import TraceEvent
 from agentlens_server.models.session import Session
@@ -90,7 +90,7 @@ async def ingest_events(
 
     for event_data in events:
         try:
-            event_id = event_data.id or str(ULID())
+            event_id = event_data.id or new_ulid()
             ts = event_data.timestamp or datetime.now(timezone.utc)
 
             # Auto-calculate cost if not provided

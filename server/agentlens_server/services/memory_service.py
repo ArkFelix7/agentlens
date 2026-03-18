@@ -7,7 +7,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from ulid import ULID
+from agentlens_server.utils import new_ulid
 
 from agentlens_server.models.memory_entry import MemoryEntry
 from agentlens_server.models.session import Session
@@ -62,7 +62,7 @@ async def create_memory_entry(db: AsyncSession, data: MemoryEntryCreate) -> Memo
     version = (latest.version + 1) if latest else 1
 
     entry = MemoryEntry(
-        id=str(ULID()),
+        id=new_ulid(),
         session_id=data.session_id,
         agent_id=data.agent_id,
         memory_key=data.memory_key,

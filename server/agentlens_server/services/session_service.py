@@ -7,7 +7,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from ulid import ULID
+from agentlens_server.utils import new_ulid
 
 from agentlens_server.models.session import Session
 from agentlens_server.schemas.session import SessionCreate, SessionResponse, SessionListResponse
@@ -61,7 +61,7 @@ async def create_or_update_session(
 
 async def create_session(db: AsyncSession, data: SessionCreate) -> SessionResponse:
     """Create a new session."""
-    session_id = data.id or str(ULID())
+    session_id = data.id or new_ulid()
     session = Session(
         id=session_id,
         agent_name=data.agent_name,

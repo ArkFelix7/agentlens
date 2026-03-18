@@ -159,7 +159,7 @@ jobs:
         working-directory: sdk-python
 
       - name: Install test deps
-        run: pip install httpx websockets pytest pytest-asyncio ulid-py
+        run: pip install httpx websockets pytest pytest-asyncio
 
       - name: Start server in background
         run: |

@@ -12,7 +12,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from ulid import ULID
+from agentlens_server.utils import new_ulid
 
 from agentlens_server.models.trace_event import TraceEvent
 from agentlens_server.models.hallucination_alert import HallucinationAlert
@@ -68,7 +68,7 @@ def _detect_number_hallucinations(
                     severity = "warning"
 
                 alerts.append(HallucinationAlert(
-                    id=str(ULID()),
+                    id=new_ulid(),
                     session_id=session_id,
                     trace_event_id=llm_event_id,
                     source_event_id=tool_event_id,
@@ -125,7 +125,7 @@ async def run_hallucination_detection(
                     score = await semantic_similarity(tool_text, llm_text)
                     if score < 0.40:
                         new_alerts.append(HallucinationAlert(
-                            id=str(ULID()),
+                            id=new_ulid(),
                             session_id=session_id,
                             trace_event_id=event.id,
                             source_event_id=last_tool.id,
