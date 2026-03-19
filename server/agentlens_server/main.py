@@ -10,7 +10,13 @@ import logging
 import signal
 import asyncio
 from contextlib import asynccontextmanager
+from importlib.metadata import version as _pkg_version, PackageNotFoundError
 import uvicorn
+
+try:
+    _SERVER_VERSION = _pkg_version("agentlens-server")
+except PackageNotFoundError:
+    _SERVER_VERSION = "dev"
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,12 +88,15 @@ if _static_dir.exists() and _static_dir.is_dir():
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "service": "AgentLens Server", "version": "0.1.0"}
+    from fastapi.responses import RedirectResponse
+    if _static_dir.exists() and _static_dir.is_dir():
+        return RedirectResponse(url="/app")
+    return {"status": "ok", "service": "AgentLens Server", "version": _SERVER_VERSION}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": _SERVER_VERSION}
 
 
 @app.websocket("/ws")
@@ -257,15 +266,17 @@ def start() -> None:
     import webbrowser
     import time
 
+    dashboard_url = "http://localhost:8766/app" if _static_dir.exists() else "http://localhost:8766"
+
     def _open_browser() -> None:
         time.sleep(2.0)
-        webbrowser.open("http://localhost:8766")
+        webbrowser.open(dashboard_url)
 
     threading.Thread(target=_open_browser, daemon=True).start()
 
     print("")
-    print("  AgentLens v0.2.0 starting...")
-    print("  Dashboard: http://localhost:8766")
+    print(f"  AgentLens v{_SERVER_VERSION} starting...")
+    print(f"  Dashboard: {dashboard_url}")
     print("  API:       http://localhost:8766/api/v1")
     print("")
     print("  Instrument your agent:")

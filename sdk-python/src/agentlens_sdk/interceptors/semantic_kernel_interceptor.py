@@ -8,7 +8,6 @@ Usage:
 """
 
 import logging
-import time
 from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
@@ -65,12 +64,12 @@ def instrument_semantic_kernel(kernel: Any) -> None:
             input_data = {}
 
         span = SpanContext(
-            session_id=session_id,
             event_type=event_type,
             event_name=event_name,
-            input_data=input_data,
+            session_id=session_id,
+            client=client,
         )
-        span.start()
+        span.set_input(input_data)
 
         try:
             await next(context)
@@ -96,16 +95,16 @@ def instrument_semantic_kernel(kernel: Any) -> None:
             except Exception:
                 pass
 
-            await span.end(
-                output_data=output_data,
-                tokens_input=tokens_input,
-                tokens_output=tokens_output,
-                model=model,
-            )
+            span.set_output(output_data)
+            span.set_tokens(tokens_input, tokens_output)
+            if model:
+                span.set_model(model)
+            await span.async_end()
 
         except Exception as exc:
             try:
-                await span.end(error=str(exc))
+                span.set_error(str(exc))
+                await span.async_end()
             except Exception:
                 pass
             raise

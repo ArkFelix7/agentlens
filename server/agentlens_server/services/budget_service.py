@@ -82,6 +82,24 @@ async def check_budget_rules(
                     triggered_at=now_str,
                 )
 
+        elif rule.rule_type == "daily_total" and rule.threshold_usd is not None:
+            daily_cost = await _get_daily_cost(db)
+            if daily_cost > rule.threshold_usd:
+                alert = BudgetAlertOut(
+                    rule_id=rule.id,
+                    rule_name=rule.rule_name,
+                    rule_type=rule.rule_type,
+                    session_id=session_id,
+                    alert_type="threshold_breached",
+                    current_value=daily_cost,
+                    threshold=rule.threshold_usd,
+                    message=(
+                        f"Daily spend ${daily_cost:.4f} exceeded threshold "
+                        f"${rule.threshold_usd:.4f}"
+                    ),
+                    triggered_at=now_str,
+                )
+
         elif rule.rule_type == "loop_detection":
             max_calls = rule.loop_max_calls or 5
             window_s = rule.loop_window_seconds or 60
@@ -112,6 +130,17 @@ async def check_budget_rules(
                 )
 
     return alerts
+
+
+async def _get_daily_cost(db: DBSession) -> float:
+    """Return total cost_usd across all events created today (UTC)."""
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    result = await db.execute(
+        select(func.coalesce(func.sum(TraceEvent.cost_usd), 0.0)).where(
+            TraceEvent.timestamp >= today_start,
+        )
+    )
+    return float(result.scalar() or 0.0)
 
 
 async def _detect_loop(

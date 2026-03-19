@@ -15,6 +15,10 @@ import { patchAnthropic } from './interceptors/anthropic';
 export { trace } from './trace';
 export { SpanContext } from './trace';
 export type { TraceEventData, InitOptions, TraceOptions, EventType, EventStatus } from './types';
+export { AgentLensCallbackHandler } from './interceptors/langchain';
+export { instrumentCrewAI } from './interceptors/crewai';
+export { instrumentAutoGen } from './interceptors/autogen';
+export { instrumentSemanticKernel } from './interceptors/semantic_kernel';
 
 let client: AgentLensClient | null = null;
 
