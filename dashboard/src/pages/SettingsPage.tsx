@@ -17,7 +17,7 @@ const KEYBOARD_SHORTCUTS = [
 ];
 
 export function SettingsPage() {
-  const { wsUrl, apiUrl, theme, autoConnect, traceRetention, setWsUrl, setApiUrl, setTheme, setAutoConnect, setTraceRetention } = useSettingsStore();
+  const { wsUrl, apiUrl, theme, autoConnect, traceRetention, piiRedaction, setWsUrl, setApiUrl, setTheme, setAutoConnect, setTraceRetention, setPiiRedaction } = useSettingsStore();
 
   return (
     <div className="h-full overflow-y-auto p-6 max-w-2xl space-y-6">
@@ -122,6 +122,22 @@ export function SettingsPage() {
         <div className="text-xs font-mono text-[var(--text-secondary)]">
           Storage: Local SQLite database · No cloud sync · No telemetry
         </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-mono text-[var(--text-primary)]">Server-side PII redaction</div>
+            <div className="text-xs font-mono text-[var(--text-tertiary)] mt-0.5">
+              Scrub sensitive fields (keys, tokens, passwords) from new events before storage
+            </div>
+          </div>
+          <button
+            onClick={() => setPiiRedaction(!piiRedaction)}
+            className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 ml-4 ${piiRedaction ? 'bg-[var(--accent-indigo)]' : 'bg-[var(--border-default)]'}`}
+            role="switch"
+            aria-checked={piiRedaction}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white shadow mx-0.5 transition-transform ${piiRedaction ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+        </div>
         <button
           onClick={() => {
             fetch('/api/v1/privacy/certificate')
@@ -150,12 +166,12 @@ export function SettingsPage() {
       {/* About */}
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg p-4 space-y-2">
         <h2 className="text-sm font-mono font-medium text-[var(--text-primary)]">About</h2>
-        <p className="text-xs text-[var(--text-secondary)] font-mono">AgentLens v0.1.0</p>
+        <p className="text-xs text-[var(--text-secondary)] font-mono">AgentLens v0.2.0</p>
         <p className="text-xs text-[var(--text-secondary)]">Real-time observability dashboard for AI agents.</p>
         <p className="text-xs text-[var(--text-tertiary)]">MIT License • Open Source</p>
         <div className="flex gap-3 pt-1">
           <a
-            href="https://github.com/agentlens/agentlens"
+            href="https://github.com/ArkFelix7/agentlens"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs text-[var(--accent-indigo)] hover:underline"
