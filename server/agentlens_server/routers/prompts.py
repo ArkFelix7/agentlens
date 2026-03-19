@@ -98,6 +98,70 @@ async def get_current_version_text(name: str, db: AsyncSession = Depends(get_db)
     return PlainTextResponse(content=version.content)
 
 
+@router.get("/prompts/{name_or_id}/versions", response_model=List[PromptVersionResponse])
+async def list_prompt_versions(name_or_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Prompt).where((Prompt.name == name_or_id) | (Prompt.id == name_or_id))
+    )
+    prompt = result.scalar_one_or_none()
+    if not prompt:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    v_result = await db.execute(
+        select(PromptVersion)
+        .where(PromptVersion.prompt_id == prompt.id)
+        .order_by(PromptVersion.version)
+    )
+    versions = v_result.scalars().all()
+    return [
+        PromptVersionResponse(
+            id=v.id,
+            prompt_id=v.prompt_id,
+            version=v.version,
+            content=v.content,
+            label=v.label,
+            commit_message=v.commit_message,
+            created_at=v.created_at.isoformat() if v.created_at else "",
+            total_uses=v.total_uses or 0,
+            avg_cost_usd=v.avg_cost_usd,
+            avg_latency_ms=v.avg_latency_ms,
+            hallucination_rate=v.hallucination_rate,
+        )
+        for v in versions
+    ]
+
+
+@router.get("/prompts/{name_or_id}/active", response_model=PromptVersionResponse)
+async def get_active_version(name_or_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Prompt).where((Prompt.name == name_or_id) | (Prompt.id == name_or_id))
+    )
+    prompt = result.scalar_one_or_none()
+    if not prompt:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    v_result = await db.execute(
+        select(PromptVersion).where(
+            PromptVersion.prompt_id == prompt.id,
+            PromptVersion.version == prompt.current_version,
+        )
+    )
+    version = v_result.scalar_one_or_none()
+    if not version:
+        raise HTTPException(status_code=404, detail="No active version found")
+    return PromptVersionResponse(
+        id=version.id,
+        prompt_id=version.prompt_id,
+        version=version.version,
+        content=version.content,
+        label=version.label,
+        commit_message=version.commit_message,
+        created_at=version.created_at.isoformat() if version.created_at else "",
+        total_uses=version.total_uses or 0,
+        avg_cost_usd=version.avg_cost_usd,
+        avg_latency_ms=version.avg_latency_ms,
+        hallucination_rate=version.hallucination_rate,
+    )
+
+
 @router.post("/prompts/{name_or_id}/versions", response_model=PromptVersionResponse, status_code=201)
 async def add_prompt_version(
     name_or_id: str, body: PromptVersionCreate, db: AsyncSession = Depends(get_db)
